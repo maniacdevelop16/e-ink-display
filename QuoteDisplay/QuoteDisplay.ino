@@ -21,8 +21,8 @@ void setup()
     Serial.println("Menu UP/DOWN    -> Select app");
     Serial.println("Menu PRESS      -> Open app");
     Serial.println("Quote UP/DOWN   -> Change quote");
-    Serial.println("Quote PRESS     -> Refresh quote");
-    Serial.println("Quote LONG PRESS-> Return to menu");
+    Serial.println("Quote PRESS     -> Return to menu");
+    Serial.println("Pomodoro PRESS  -> Start/pause; long press for menu");
 }
 
 void loop()

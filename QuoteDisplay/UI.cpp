@@ -10,12 +10,19 @@ namespace
 {
 uint8_t currentQuote = 0;
 uint8_t selectedApp = 0;
+constexpr uint16_t POMODORO_DURATION_SECONDS = 25 * 60;
+constexpr uint16_t POMODORO_EXTENSION_SECONDS = 5 * 60;
+constexpr uint16_t POMODORO_MAX_SECONDS = 90 * 60;
+uint16_t pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
+unsigned long pomodoroLastTick = 0;
+bool pomodoroRunning = false;
+bool pomodoroComplete = false;
 
 enum Screen
 {
     MENU,
     QUOTE_DISPLAY,
-    DEMO_TWO,
+    POMODORO,
     DEMO_THREE
 };
 
@@ -31,16 +38,67 @@ void displayMenu()
     showMainMenu(selectedApp);
 }
 
-void openSelectedApp()
+void displayPomodoro()
 {
-    currentScreen = static_cast<Screen>(selectedApp + 1);
-    if (currentScreen == QUOTE_DISPLAY)
+    showPomodoro(pomodoroRemainingSeconds, pomodoroRunning, pomodoroComplete);
+}
+
+void resetPomodoro()
+{
+    pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
+    pomodoroRunning = false;
+    pomodoroComplete = false;
+    displayPomodoro();
+}
+
+void updatePomodoroClock()
+{
+    if (!pomodoroRunning)
     {
-        displayCurrentQuote();
+        return;
+    }
+
+    const unsigned long elapsedSeconds = (millis() - pomodoroLastTick) / 1000;
+    if (elapsedSeconds == 0)
+    {
+        return;
+    }
+
+    pomodoroLastTick += elapsedSeconds * 1000UL;
+    if (elapsedSeconds >= pomodoroRemainingSeconds)
+    {
+        pomodoroRemainingSeconds = 0;
+        pomodoroRunning = false;
+        pomodoroComplete = true;
+        displayPomodoro();
     }
     else
     {
-        showDemo(selectedApp + 1);
+        pomodoroRemainingSeconds -= elapsedSeconds;
+        // E-paper panels should not be fully refreshed every second.
+        if (pomodoroRemainingSeconds % 10 == 0)
+        {
+            displayPomodoro();
+        }
+    }
+}
+
+void openSelectedApp()
+{
+    if (selectedApp == 0)
+    {
+        currentScreen = QUOTE_DISPLAY;
+        displayCurrentQuote();
+    }
+    else if (selectedApp == 1)
+    {
+        currentScreen = POMODORO;
+        displayPomodoro();
+    }
+    else
+    {
+        currentScreen = DEMO_THREE;
+        showDemo(3);
     }
 }
 
@@ -93,7 +151,49 @@ void updateUI()
         }
         else if (event == INPUT_PRESS)
         {
-            displayCurrentQuote();
+            returnToMenu();
+        }
+        else if (event == INPUT_LONG_PRESS)
+        {
+            returnToMenu();
+        }
+        return;
+    }
+
+    if (currentScreen == POMODORO)
+    {
+        updatePomodoroClock();
+
+        if (event == INPUT_NEXT)
+        {
+            resetPomodoro();
+        }
+        else if (event == INPUT_PREVIOUS)
+        {
+            const uint16_t availableSeconds = POMODORO_MAX_SECONDS - pomodoroRemainingSeconds;
+            if (POMODORO_EXTENSION_SECONDS >= availableSeconds)
+            {
+                pomodoroRemainingSeconds = POMODORO_MAX_SECONDS;
+            }
+            else
+            {
+                pomodoroRemainingSeconds += POMODORO_EXTENSION_SECONDS;
+            }
+            pomodoroComplete = false;
+            displayPomodoro();
+        }
+        else if (event == INPUT_PRESS)
+        {
+            if (pomodoroComplete)
+            {
+                resetPomodoro();
+            }
+            else
+            {
+                pomodoroRunning = !pomodoroRunning;
+                pomodoroLastTick = millis();
+                displayPomodoro();
+            }
         }
         else if (event == INPUT_LONG_PRESS)
         {

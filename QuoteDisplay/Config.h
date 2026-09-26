@@ -12,8 +12,9 @@ constexpr uint8_t EPD_MOSI = 11;
 constexpr uint8_t EPD_POWER = 7;
 
 // Rotary/button pins. Inputs use INPUT_PULLUP and are active LOW.
-constexpr uint8_t ROTARY_UP = 6;
-constexpr uint8_t ROTARY_DOWN = 4;
+// These mappings intentionally swap the physical UP and DOWN buttons.
+constexpr uint8_t ROTARY_UP = 4;
+constexpr uint8_t ROTARY_DOWN = 6;
 constexpr uint8_t ROTARY_PRESS = 5;
 
 // Display layout
