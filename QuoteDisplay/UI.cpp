@@ -16,13 +16,17 @@ uint16_t pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
 unsigned long pomodoroLastTick = 0;
 uint8_t pomodoroPartialRefreshCount = 0;
+uint8_t breathingPhase = 0;
+uint8_t breathingCurrentRound = 1;
+uint8_t breathingTotalRounds = BREATHING_DEFAULT_ROUNDS;
+unsigned long breathingPhaseStartedAt = 0;
 
 enum Screen
 {
     MENU,
     QUOTE_DISPLAY,
     POMODORO,
-    DEMO_THREE
+    BREATHING
 };
 
 Screen currentScreen = MENU;
@@ -36,6 +40,16 @@ enum PomodoroState
 };
 
 PomodoroState pomodoroState = POMODORO_READY;
+
+enum BreathingState
+{
+    BREATHING_READY,
+    BREATHING_RUNNING,
+    BREATHING_PAUSED,
+    BREATHING_COMPLETE
+};
+
+BreathingState breathingState = BREATHING_READY;
 
 void displayCurrentQuote()
 {
@@ -144,6 +158,88 @@ void addPomodoroTime()
     displayPomodoro();
 }
 
+void displayBreathing()
+{
+    const char* phaseLabels[] = { "INHALE", "HOLD", "EXHALE", "HOLD" };
+    const char* phaseLabel = phaseLabels[breathingPhase];
+    const char* status = "4 SECONDS PER PHASE";
+    const char* action = "PRESS TO START";
+
+    if (breathingState == BREATHING_RUNNING)
+    {
+        status = "FOLLOW THE SQUARE";
+        action = "PRESS TO PAUSE";
+    }
+    else if (breathingState == BREATHING_PAUSED)
+    {
+        status = "PAUSED";
+        action = "PRESS TO RESUME";
+    }
+    else if (breathingState == BREATHING_COMPLETE)
+    {
+        phaseLabel = "COMPLETE";
+        status = "ALL ROUNDS FINISHED";
+        action = "PRESS TO RESET";
+    }
+
+    showBreathing(breathingPhase, breathingCurrentRound, breathingTotalRounds,
+                  phaseLabel, status, action);
+}
+
+void resetBreathing()
+{
+    breathingPhase = 0;
+    breathingCurrentRound = 1;
+    breathingState = BREATHING_READY;
+    displayBreathing();
+}
+
+void selectBreathingRounds()
+{
+    breathingTotalRounds = breathingTotalRounds == BREATHING_MAX_ROUNDS
+        ? 1
+        : breathingTotalRounds + 1;
+    resetBreathing();
+}
+
+void updateBreathing()
+{
+    if (breathingState != BREATHING_RUNNING)
+    {
+        return;
+    }
+
+    unsigned long elapsedPhases = (millis() - breathingPhaseStartedAt) / BREATHING_PHASE_DURATION_MS;
+    if (elapsedPhases == 0)
+    {
+        return;
+    }
+
+    breathingPhaseStartedAt += elapsedPhases * BREATHING_PHASE_DURATION_MS;
+    while (elapsedPhases > 0 && breathingState == BREATHING_RUNNING)
+    {
+        --elapsedPhases;
+        if (breathingPhase == BREATHING_PHASE_COUNT - 1)
+        {
+            breathingPhase = 0;
+            if (breathingCurrentRound == breathingTotalRounds)
+            {
+                breathingState = BREATHING_COMPLETE;
+            }
+            else
+            {
+                ++breathingCurrentRound;
+            }
+        }
+        else
+        {
+            ++breathingPhase;
+        }
+    }
+
+    displayBreathing();
+}
+
 void openSelectedApp()
 {
     if (selectedApp == 0)
@@ -158,8 +254,8 @@ void openSelectedApp()
     }
     else
     {
-        currentScreen = DEMO_THREE;
-        showDemo(3);
+        currentScreen = BREATHING;
+        displayBreathing();
     }
 }
 
@@ -246,6 +342,40 @@ void updateUI()
                     : POMODORO_RUNNING;
                 pomodoroLastTick = millis();
                 displayPomodoro();
+            }
+        }
+        else if (event == INPUT_LONG_PRESS)
+        {
+            returnToMenu();
+        }
+        return;
+    }
+
+    if (currentScreen == BREATHING)
+    {
+        updateBreathing();
+
+        if (event == INPUT_NEXT)
+        {
+            resetBreathing();
+        }
+        else if (event == INPUT_PREVIOUS && breathingState != BREATHING_RUNNING)
+        {
+            selectBreathingRounds();
+        }
+        else if (event == INPUT_PRESS)
+        {
+            if (breathingState == BREATHING_COMPLETE)
+            {
+                resetBreathing();
+            }
+            else
+            {
+                breathingState = breathingState == BREATHING_RUNNING
+                    ? BREATHING_PAUSED
+                    : BREATHING_RUNNING;
+                breathingPhaseStartedAt = millis();
+                displayBreathing();
             }
         }
         else if (event == INPUT_LONG_PRESS)

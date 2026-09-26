@@ -75,6 +75,20 @@ void drawPomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds, const c
                          fillWidth, POMODORO_PROGRESS_HEIGHT - 2, GxEPD_BLACK);
     }
 }
+
+void drawBreathingSquare(uint8_t phase)
+{
+    const int sizes[] = { 48, 78, 108, 78 };
+    const int size = sizes[phase];
+    const int x = (DISPLAY_WIDTH - size) / 2;
+    const int y = 140 - (size / 2);
+
+    display.drawRect(x, y, size, size, GxEPD_BLACK);
+    if (phase == 0)
+    {
+        display.fillRect((DISPLAY_WIDTH - 18) / 2, 131, 18, 18, GxEPD_BLACK);
+    }
+}
 }
 
 void initializeDisplay()
@@ -134,8 +148,8 @@ void showQuote(uint8_t index)
 
 void showMainMenu(uint8_t selectedApp)
 {
-    const char* apps[] = { "1  QUOTE DISPLAY", "2  POMODORO", "3  DEMO SCREEN" };
-    const char* descriptions[] = { "Browse daily quotes", "Focus timer: 25 minutes", "Reserved for your next app" };
+    const char* apps[] = { "1  QUOTE DISPLAY", "2  POMODORO", "3  BOX BREATHING" };
+    const char* descriptions[] = { "Browse daily quotes", "Focus timer: 25 minutes", "Guided 4-4-4-4 breathing" };
 
     display.setRotation(0);
     display.setFullWindow();
@@ -198,10 +212,12 @@ void updatePomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds)
     display.setFullWindow();
 }
 
-void showDemo(uint8_t appNumber)
+void showBreathing(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
+                   const char* phaseLabel, const char* status, const char* action)
 {
-    const char* title = appNumber == 2 ? "APP 2" : "APP 3";
-    const char* message = appNumber == 2 ? "Demo screen ready" : "Another demo screen";
+    char roundText[20];
+    snprintf(roundText, sizeof(roundText), "ROUND %u / %u",
+             static_cast<unsigned int>(currentRound), static_cast<unsigned int>(totalRounds));
 
     display.setRotation(0);
     display.setFullWindow();
@@ -212,8 +228,16 @@ void showDemo(uint8_t appNumber)
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
         display.setFont(&FreeMonoBold12pt7b);
-        drawCenteredText(title, 100);
-        drawCenteredText(message, 150);
-        drawCenteredText("PRESS: MENU", 250);
+        display.fillRect(0, 0, DISPLAY_WIDTH, HEADER_HEIGHT, GxEPD_BLACK);
+        display.setTextColor(GxEPD_WHITE);
+        drawCenteredText("BOX BREATHING", 34);
+        display.setTextColor(GxEPD_BLACK);
+        drawCenteredText(phaseLabel, 78);
+        drawBreathingSquare(phase);
+        drawCenteredText(roundText, 210);
+        drawCenteredText(status, 232);
+        drawCenteredText(action, 253);
+        drawCenteredText("UP RESET  DOWN ROUNDS", 274);
+        drawCenteredText("HOLD: MENU", 295);
     } while (display.nextPage());
 }

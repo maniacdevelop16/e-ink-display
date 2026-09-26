@@ -45,5 +45,11 @@ constexpr int POMODORO_PROGRESS_Y = 184;
 constexpr int POMODORO_PROGRESS_WIDTH = 310;
 constexpr int POMODORO_PROGRESS_HEIGHT = 14;
 
+// Box-breathing behavior. One round is inhale, hold, exhale, hold.
+constexpr uint8_t BREATHING_PHASE_COUNT = 4;
+constexpr uint8_t BREATHING_DEFAULT_ROUNDS = 4;
+constexpr uint8_t BREATHING_MAX_ROUNDS = 8;
+constexpr unsigned long BREATHING_PHASE_DURATION_MS = 4000;
+
 constexpr unsigned long DEBOUNCE_TIME_MS = 80;
 constexpr unsigned long LONG_PRESS_TIME_MS = 800;
