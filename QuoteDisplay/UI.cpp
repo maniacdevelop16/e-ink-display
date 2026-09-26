@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "Config.h"
 #include "Display.h"
 #include "Input.h"
 #include "Quotes.h"
@@ -10,13 +11,11 @@ namespace
 {
 uint8_t currentQuote = 0;
 uint8_t selectedApp = 0;
-constexpr uint16_t POMODORO_DURATION_SECONDS = 25 * 60;
-constexpr uint16_t POMODORO_EXTENSION_SECONDS = 5 * 60;
-constexpr uint16_t POMODORO_MAX_SECONDS = 90 * 60;
 uint16_t pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
+uint16_t pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
+uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
 unsigned long pomodoroLastTick = 0;
-bool pomodoroRunning = false;
-bool pomodoroComplete = false;
+uint8_t pomodoroPartialRefreshCount = 0;
 
 enum Screen
 {
@@ -27,6 +26,16 @@ enum Screen
 };
 
 Screen currentScreen = MENU;
+
+enum PomodoroState
+{
+    POMODORO_READY,
+    POMODORO_RUNNING,
+    POMODORO_PAUSED,
+    POMODORO_COMPLETE
+};
+
+PomodoroState pomodoroState = POMODORO_READY;
 
 void displayCurrentQuote()
 {
@@ -40,20 +49,54 @@ void displayMenu()
 
 void displayPomodoro()
 {
-    showPomodoro(pomodoroRemainingSeconds, pomodoroRunning, pomodoroComplete);
+    const char* status = "READY TO FOCUS";
+    const char* action = "PRESS TO START";
+
+    if (pomodoroState == POMODORO_RUNNING)
+    {
+        status = "FOCUS IN PROGRESS";
+        action = "PRESS TO PAUSE";
+    }
+    else if (pomodoroState == POMODORO_PAUSED)
+    {
+        status = "PAUSED";
+        action = "PRESS TO RESUME";
+    }
+    else if (pomodoroState == POMODORO_COMPLETE)
+    {
+        status = "SESSION COMPLETE";
+        action = "PRESS TO RESET";
+    }
+
+    showPomodoro(pomodoroRemainingSeconds, pomodoroTotalSeconds, status, action);
+    pomodoroLastRenderedSeconds = pomodoroRemainingSeconds;
+    pomodoroPartialRefreshCount = 0;
 }
 
 void resetPomodoro()
 {
     pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
-    pomodoroRunning = false;
-    pomodoroComplete = false;
+    pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
+    pomodoroState = POMODORO_READY;
     displayPomodoro();
+}
+
+void refreshPomodoroTimer()
+{
+    if (pomodoroPartialRefreshCount >= POMODORO_PARTIALS_BEFORE_FULL_REFRESH)
+    {
+        displayPomodoro();
+        return;
+    }
+
+    updatePomodoroTimer(pomodoroRemainingSeconds, pomodoroTotalSeconds);
+    pomodoroLastRenderedSeconds = pomodoroRemainingSeconds;
+    ++pomodoroPartialRefreshCount;
 }
 
 void updatePomodoroClock()
 {
-    if (!pomodoroRunning)
+    if (pomodoroState != POMODORO_RUNNING)
     {
         return;
     }
@@ -68,19 +111,37 @@ void updatePomodoroClock()
     if (elapsedSeconds >= pomodoroRemainingSeconds)
     {
         pomodoroRemainingSeconds = 0;
-        pomodoroRunning = false;
-        pomodoroComplete = true;
+        pomodoroState = POMODORO_COMPLETE;
         displayPomodoro();
     }
     else
     {
         pomodoroRemainingSeconds -= elapsedSeconds;
-        // E-paper panels should not be fully refreshed every second.
-        if (pomodoroRemainingSeconds % 10 == 0)
+        if (pomodoroLastRenderedSeconds - pomodoroRemainingSeconds >= POMODORO_REFRESH_INTERVAL_SECONDS)
         {
-            displayPomodoro();
+            refreshPomodoroTimer();
         }
     }
+}
+
+void addPomodoroTime()
+{
+    if (pomodoroState == POMODORO_COMPLETE)
+    {
+        pomodoroTotalSeconds = POMODORO_EXTENSION_SECONDS;
+        pomodoroRemainingSeconds = POMODORO_EXTENSION_SECONDS;
+        pomodoroState = POMODORO_READY;
+        displayPomodoro();
+        return;
+    }
+
+    const uint16_t availableSeconds = POMODORO_MAX_SECONDS - pomodoroTotalSeconds;
+    const uint16_t addedSeconds = POMODORO_EXTENSION_SECONDS >= availableSeconds
+        ? availableSeconds
+        : POMODORO_EXTENSION_SECONDS;
+    pomodoroTotalSeconds += addedSeconds;
+    pomodoroRemainingSeconds += addedSeconds;
+    displayPomodoro();
 }
 
 void openSelectedApp()
@@ -170,27 +231,19 @@ void updateUI()
         }
         else if (event == INPUT_PREVIOUS)
         {
-            const uint16_t availableSeconds = POMODORO_MAX_SECONDS - pomodoroRemainingSeconds;
-            if (POMODORO_EXTENSION_SECONDS >= availableSeconds)
-            {
-                pomodoroRemainingSeconds = POMODORO_MAX_SECONDS;
-            }
-            else
-            {
-                pomodoroRemainingSeconds += POMODORO_EXTENSION_SECONDS;
-            }
-            pomodoroComplete = false;
-            displayPomodoro();
+            addPomodoroTime();
         }
         else if (event == INPUT_PRESS)
         {
-            if (pomodoroComplete)
+            if (pomodoroState == POMODORO_COMPLETE)
             {
                 resetPomodoro();
             }
             else
             {
-                pomodoroRunning = !pomodoroRunning;
+                pomodoroState = pomodoroState == POMODORO_RUNNING
+                    ? POMODORO_PAUSED
+                    : POMODORO_RUNNING;
                 pomodoroLastTick = millis();
                 displayPomodoro();
             }
