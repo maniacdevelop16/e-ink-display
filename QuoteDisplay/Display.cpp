@@ -26,6 +26,26 @@ void drawCenteredText(const char* text, int y)
     display.setCursor((DISPLAY_WIDTH - width) / 2, y);
     display.println(text);
 }
+
+void drawMenuItem(const char* label, int y, bool selected)
+{
+    int16_t x1;
+    int16_t y1;
+    uint16_t width;
+    uint16_t height;
+    display.getTextBounds(label, 0, y, &x1, &y1, &width, &height);
+    const int x = (DISPLAY_WIDTH - width) / 2;
+
+    if (selected)
+    {
+        display.fillRect(x - 12, y - height - 5, width + 24, height + 10, GxEPD_BLACK);
+        display.setTextColor(GxEPD_WHITE);
+    }
+
+    display.setCursor(x, y);
+    display.println(label);
+    display.setTextColor(GxEPD_BLACK);
+}
 }
 
 void initializeDisplay()
@@ -79,4 +99,46 @@ void showQuote(uint8_t index)
     Serial.print(NUM_QUOTES);
     Serial.print(": ");
     Serial.println(quote.line1);
+}
+
+void showMainMenu(uint8_t selectedApp)
+{
+    const char* apps[] = { "App 1: Quote Display", "App 2: Demo Screen", "App 3: Demo Screen" };
+
+    display.setRotation(0);
+    display.setFullWindow();
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setTextColor(GxEPD_BLACK);
+        display.setFont(&FreeMonoBold12pt7b);
+        drawCenteredText("START MENU", 55);
+        drawMenuItem(apps[0], 115, selectedApp == 0);
+        drawMenuItem(apps[1], 160, selectedApp == 1);
+        drawMenuItem(apps[2], 205, selectedApp == 2);
+        drawCenteredText("UP/DOWN: SELECT", 250);
+        drawCenteredText("PRESS: OPEN", 280);
+    } while (display.nextPage());
+}
+
+void showDemo(uint8_t appNumber)
+{
+    const char* title = appNumber == 2 ? "APP 2" : "APP 3";
+    const char* message = appNumber == 2 ? "Demo screen ready" : "Another demo screen";
+
+    display.setRotation(0);
+    display.setFullWindow();
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setTextColor(GxEPD_BLACK);
+        display.setFont(&FreeMonoBold12pt7b);
+        drawCenteredText(title, 100);
+        drawCenteredText(message, 150);
+        drawCenteredText("PRESS: MENU", 250);
+    } while (display.nextPage());
 }

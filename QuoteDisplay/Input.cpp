@@ -26,6 +26,30 @@ bool wasPressed(uint8_t pin)
     delay(DEBOUNCE_TIME_MS);
     return true;
 }
+
+InputEvent readPressEvent()
+{
+    if (digitalRead(ROTARY_PRESS) != LOW)
+    {
+        return INPUT_NONE;
+    }
+
+    delay(DEBOUNCE_TIME_MS);
+    if (digitalRead(ROTARY_PRESS) != LOW)
+    {
+        return INPUT_NONE;
+    }
+
+    const unsigned long pressedAt = millis();
+    while (digitalRead(ROTARY_PRESS) == LOW)
+    {
+        delay(10);
+    }
+
+    const bool isLongPress = millis() - pressedAt >= LONG_PRESS_TIME_MS;
+    delay(DEBOUNCE_TIME_MS);
+    return isLongPress ? INPUT_LONG_PRESS : INPUT_PRESS;
+}
 }
 
 void initializeInput()
@@ -45,9 +69,5 @@ InputEvent readInputEvent()
     {
         return INPUT_PREVIOUS;
     }
-    if (wasPressed(ROTARY_PRESS))
-    {
-        return INPUT_PRESS;
-    }
-    return INPUT_NONE;
+    return readPressEvent();
 }

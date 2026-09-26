@@ -27,3 +27,4 @@ constexpr int COUNTER_RIGHT_MARGIN = 15;
 constexpr int COUNTER_Y = 285;
 
 constexpr unsigned long DEBOUNCE_TIME_MS = 80;
+constexpr unsigned long LONG_PRESS_TIME_MS = 800;

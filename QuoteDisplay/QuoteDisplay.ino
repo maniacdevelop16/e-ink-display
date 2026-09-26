@@ -16,11 +16,13 @@ void setup()
     initializeDisplay();
     initializeUI();
 
-    Serial.println("DISPLAY READY");
+    Serial.println("MENU READY");
     Serial.println();
-    Serial.println("Rotary UP    -> Next quote");
-    Serial.println("Rotary DOWN  -> Previous quote");
-    Serial.println("Rotary PRESS -> Refresh quote");
+    Serial.println("Menu UP/DOWN    -> Select app");
+    Serial.println("Menu PRESS      -> Open app");
+    Serial.println("Quote UP/DOWN   -> Change quote");
+    Serial.println("Quote PRESS     -> Refresh quote");
+    Serial.println("Quote LONG PRESS-> Return to menu");
 }
 
 void loop()
