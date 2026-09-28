@@ -159,9 +159,14 @@ void showQuote(uint8_t index)
     {
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
-        display.setFont(&FreeMonoBold12pt7b);
 
-        drawCenteredText("PRESS: MENU", 30);
+        display.setFont(&FreeMonoBold9pt7b);
+        drawCenteredText("A QUIET THOUGHT", 36);
+        display.drawLine(82, 56, DISPLAY_WIDTH - 82, 56, GxEPD_BLACK);
+
+        display.setFont(&FreeMonoBold12pt7b);
+        display.drawLine(58, 84, 58, 186, GxEPD_BLACK);
+        display.fillCircle(58, 84, 3, GxEPD_BLACK);
 
         drawCenteredText(quote.line1, QUOTE_Y1);
         drawCenteredText(quote.line2, QUOTE_Y2);
@@ -169,18 +174,16 @@ void showQuote(uint8_t index)
 
         char authorText[50];
         snprintf(authorText, sizeof(authorText), "- %s", quote.author);
-        drawCenteredText(authorText, AUTHOR_Y);
+        display.setFont(&FreeMonoBold9pt7b);
+        drawCenteredText(authorText, 214);
+        display.drawLine(104, 234, DISPLAY_WIDTH - 104, 234, GxEPD_BLACK);
 
-        char counter[10];
-        snprintf(counter, sizeof(counter), "%d / %d", index + 1, NUM_QUOTES);
-
-        int16_t x1;
-        int16_t y1;
-        uint16_t width;
-        uint16_t height;
-        display.getTextBounds(counter, 0, 0, &x1, &y1, &width, &height);
-        display.setCursor(DISPLAY_WIDTH - width - COUNTER_RIGHT_MARGIN, COUNTER_Y);
-        display.println(counter);
+        char counter[22];
+        snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
+                 static_cast<unsigned int>(index + 1), static_cast<unsigned int>(NUM_QUOTES));
+        drawCenteredText(counter, 258);
+        drawCenteredText("UP / DOWN  TO BROWSE", 279);
+        drawCenteredText("PRESS  FOR MENU", 297);
     } while (display.nextPage());
 
     Serial.print("Quote ");
