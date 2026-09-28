@@ -39,9 +39,9 @@ constexpr uint16_t POMODORO_MAX_SECONDS = 90 * 60;
 constexpr uint16_t POMODORO_REFRESH_INTERVAL_SECONDS = 30;
 constexpr uint8_t POMODORO_PARTIALS_BEFORE_FULL_REFRESH = 8;
 constexpr int POMODORO_DYNAMIC_Y = 72;
-constexpr int POMODORO_DYNAMIC_HEIGHT = 132;
+constexpr int POMODORO_DYNAMIC_HEIGHT = 150;
 constexpr int POMODORO_PROGRESS_X = 45;
-constexpr int POMODORO_PROGRESS_Y = 184;
+constexpr int POMODORO_PROGRESS_Y = 166;
 constexpr int POMODORO_PROGRESS_WIDTH = 310;
 constexpr int POMODORO_PROGRESS_HEIGHT = 14;
 
@@ -50,6 +50,9 @@ constexpr uint8_t BREATHING_PHASE_COUNT = 4;
 constexpr uint8_t BREATHING_DEFAULT_ROUNDS = 4;
 constexpr uint8_t BREATHING_MAX_ROUNDS = 8;
 constexpr unsigned long BREATHING_PHASE_DURATION_MS = 4000;
+constexpr uint8_t BREATHING_PARTIALS_BEFORE_FULL_REFRESH = 8;
+constexpr int BREATHING_DYNAMIC_Y = 55;
+constexpr int BREATHING_DYNAMIC_HEIGHT = 185;
 
 constexpr unsigned long DEBOUNCE_TIME_MS = 80;
 constexpr unsigned long LONG_PRESS_TIME_MS = 800;
