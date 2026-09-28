@@ -74,6 +74,12 @@ void displaySettings()
 
 void refreshMenuSelection()
 {
+    if (!getSettings().partialRefreshEnabled)
+    {
+        displayMenu();
+        return;
+    }
+
     if (menuPartialRefreshCount >= partialRefreshLimit(MENU_PARTIALS_BEFORE_FULL_REFRESH))
     {
         displayMenu();
@@ -120,6 +126,12 @@ void resetPomodoro()
 
 void refreshPomodoroTimer()
 {
+    if (!getSettings().partialRefreshEnabled)
+    {
+        displayPomodoro();
+        return;
+    }
+
     if (pomodoroPartialRefreshCount >= partialRefreshLimit(POMODORO_PARTIALS_BEFORE_FULL_REFRESH))
     {
         displayPomodoro();
@@ -225,6 +237,12 @@ void displayBreathing()
 
 void refreshBreathingPhase()
 {
+    if (!getSettings().partialRefreshEnabled)
+    {
+        displayBreathing();
+        return;
+    }
+
     if (breathingPartialRefreshCount >= partialRefreshLimit(BREATHING_PARTIALS_BEFORE_FULL_REFRESH))
     {
         displayBreathing();
@@ -468,13 +486,17 @@ void updateUI()
         {
             if (selectedSetting == 0)
             {
-                cycleTextSize();
+                cycleFontChoice();
             }
             else if (selectedSetting == 1)
             {
-                cycleRefreshStyle();
+                togglePartialRefresh();
             }
             else if (selectedSetting == 2)
+            {
+                cycleRefreshStyle();
+            }
+            else if (selectedSetting == 3)
             {
                 toggleNavigationHints();
             }

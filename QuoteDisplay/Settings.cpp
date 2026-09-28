@@ -4,7 +4,7 @@
 
 namespace
 {
-GlobalSettings settings = { TEXT_COMFORTABLE, REFRESH_GENTLE, true };
+GlobalSettings settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true, true };
 }
 
 void initializeSettings()
@@ -17,14 +17,19 @@ const GlobalSettings& getSettings()
     return settings;
 }
 
-void cycleTextSize()
+void cycleFontChoice()
 {
-    settings.textSize = settings.textSize == TEXT_COMPACT ? TEXT_COMFORTABLE : TEXT_COMPACT;
+    settings.fontChoice = static_cast<FontChoice>((settings.fontChoice + 1) % 5);
 }
 
 void cycleRefreshStyle()
 {
     settings.refreshStyle = settings.refreshStyle == REFRESH_GENTLE ? REFRESH_RESPONSIVE : REFRESH_GENTLE;
+}
+
+void togglePartialRefresh()
+{
+    settings.partialRefreshEnabled = !settings.partialRefreshEnabled;
 }
 
 void toggleNavigationHints()
@@ -34,12 +39,19 @@ void toggleNavigationHints()
 
 void resetSettings()
 {
-    settings = { TEXT_COMFORTABLE, REFRESH_GENTLE, true };
+    settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true, true };
 }
 
-const char* textSizeLabel()
+const char* fontChoiceLabel()
 {
-    return settings.textSize == TEXT_COMPACT ? "COMPACT" : "COMFORT";
+    const char* labels[] = {
+        "MONO COMPACT",
+        "MONO COMFORT",
+        "SANS COMPACT",
+        "SANS COMFORT",
+        "SERIF READER"
+    };
+    return labels[settings.fontChoice];
 }
 
 const char* refreshStyleLabel()

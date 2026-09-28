@@ -2,10 +2,13 @@
 
 #include <Arduino.h>
 
-enum TextSize
+enum FontChoice
 {
-    TEXT_COMPACT,
-    TEXT_COMFORTABLE
+    FONT_MONO_COMPACT,
+    FONT_MONO_COMFORT,
+    FONT_SANS_COMPACT,
+    FONT_SANS_COMFORT,
+    FONT_SERIF_READER
 };
 
 enum RefreshStyle
@@ -16,19 +19,21 @@ enum RefreshStyle
 
 struct GlobalSettings
 {
-    TextSize textSize;
+    FontChoice fontChoice;
     RefreshStyle refreshStyle;
+    bool partialRefreshEnabled;
     bool showNavigationHints;
 };
 
 void initializeSettings();
 const GlobalSettings& getSettings();
-void cycleTextSize();
+void cycleFontChoice();
 void cycleRefreshStyle();
+void togglePartialRefresh();
 void toggleNavigationHints();
 void resetSettings();
 
-const char* textSizeLabel();
+const char* fontChoiceLabel();
 const char* refreshStyleLabel();
 uint16_t pomodoroRefreshIntervalSeconds();
 uint8_t partialRefreshLimit(uint8_t defaultLimit);

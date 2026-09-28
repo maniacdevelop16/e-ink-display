@@ -5,6 +5,11 @@
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
+#include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeSans12pt7b.h>
+#include <Fonts/FreeSans18pt7b.h>
+#include <Fonts/FreeSerif12pt7b.h>
+#include <Fonts/FreeSerif18pt7b.h>
 
 #include "Config.h"
 #include "Settings.h"
@@ -32,16 +37,46 @@ void drawCenteredText(const char* text, int y)
 
 void setReadingFont()
 {
-    display.setFont(getSettings().textSize == TEXT_COMPACT
-        ? &FreeMonoBold9pt7b
-        : &FreeMonoBold12pt7b);
+    switch (getSettings().fontChoice)
+    {
+        case FONT_MONO_COMPACT:
+            display.setFont(&FreeMonoBold9pt7b);
+            break;
+        case FONT_MONO_COMFORT:
+            display.setFont(&FreeMonoBold12pt7b);
+            break;
+        case FONT_SANS_COMPACT:
+            display.setFont(&FreeSans9pt7b);
+            break;
+        case FONT_SANS_COMFORT:
+            display.setFont(&FreeSans12pt7b);
+            break;
+        case FONT_SERIF_READER:
+            display.setFont(&FreeSerif12pt7b);
+            break;
+    }
 }
 
 void setPrimaryFont()
 {
-    display.setFont(getSettings().textSize == TEXT_COMPACT
-        ? &FreeMonoBold12pt7b
-        : &FreeMonoBold18pt7b);
+    switch (getSettings().fontChoice)
+    {
+        case FONT_MONO_COMPACT:
+            display.setFont(&FreeMonoBold12pt7b);
+            break;
+        case FONT_MONO_COMFORT:
+            display.setFont(&FreeMonoBold18pt7b);
+            break;
+        case FONT_SANS_COMPACT:
+            display.setFont(&FreeSans12pt7b);
+            break;
+        case FONT_SANS_COMFORT:
+            display.setFont(&FreeSans18pt7b);
+            break;
+        case FONT_SERIF_READER:
+            display.setFont(&FreeSerif18pt7b);
+            break;
+    }
 }
 
 void drawMenuItem(const char* label, int y, bool selected)
@@ -68,7 +103,7 @@ void drawMenuContent(uint8_t selectedApp)
         "Browse daily quotes",
         "Focus timer: 25 minutes",
         "Guided 4-4-4-4 breathing",
-        "Text, refresh, and hint options"
+        "Fonts, refresh, and hint options"
     };
 
     display.setTextColor(GxEPD_BLACK);
@@ -258,14 +293,17 @@ void updateMainMenuSelection(uint8_t selectedApp)
 
 void showSettings(uint8_t selectedSetting)
 {
-    char textSizeRow[32];
+    char fontRow[32];
+    char partialRow[32];
     char refreshRow[32];
     char hintsRow[32];
-    snprintf(textSizeRow, sizeof(textSizeRow), "TEXT SIZE: %s", textSizeLabel());
+    snprintf(fontRow, sizeof(fontRow), "FONT: %s", fontChoiceLabel());
+    snprintf(partialRow, sizeof(partialRow), "PARTIAL REFRESH: %s",
+             getSettings().partialRefreshEnabled ? "ON" : "OFF");
     snprintf(refreshRow, sizeof(refreshRow), "REFRESH: %s", refreshStyleLabel());
     snprintf(hintsRow, sizeof(hintsRow), "NAV HINTS: %s",
              getSettings().showNavigationHints ? "SHOW" : "HIDE");
-    const char* rows[] = { textSizeRow, refreshRow, hintsRow, "RESET DEFAULTS" };
+    const char* rows[] = { fontRow, partialRow, refreshRow, hintsRow, "RESET DEFAULTS" };
 
     display.setRotation(0);
     display.setFullWindow();
@@ -280,12 +318,13 @@ void showSettings(uint8_t selectedSetting)
         display.setFont(&FreeMonoBold9pt7b);
         drawCenteredText("APPLIES TO EVERY APP", 70);
         display.drawLine(84, 84, DISPLAY_WIDTH - 84, 84, GxEPD_BLACK);
-        drawMenuItem(rows[0], 116, selectedSetting == 0);
-        drawMenuItem(rows[1], 146, selectedSetting == 1);
-        drawMenuItem(rows[2], 176, selectedSetting == 2);
-        drawMenuItem(rows[3], 206, selectedSetting == 3);
-        drawCenteredText("UP / DOWN  SELECT", 255);
-        drawCenteredText("PRESS  CHANGE", 276);
+        drawMenuItem(rows[0], 106, selectedSetting == 0);
+        drawMenuItem(rows[1], 130, selectedSetting == 1);
+        drawMenuItem(rows[2], 154, selectedSetting == 2);
+        drawMenuItem(rows[3], 178, selectedSetting == 3);
+        drawMenuItem(rows[4], 202, selectedSetting == 4);
+        drawCenteredText("UP / DOWN  SELECT", 250);
+        drawCenteredText("PRESS  CHANGE", 274);
         drawCenteredText("HOLD  MENU", 296);
     } while (display.nextPage());
 }
