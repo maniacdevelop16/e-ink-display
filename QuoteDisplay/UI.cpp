@@ -6,11 +6,13 @@
 #include "Display.h"
 #include "Input.h"
 #include "Quotes.h"
+#include "Settings.h"
 
 namespace
 {
 uint8_t currentQuote = 0;
 uint8_t selectedApp = 0;
+uint8_t selectedSetting = 0;
 uint16_t pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
@@ -28,7 +30,8 @@ enum Screen
     MENU,
     QUOTE_DISPLAY,
     POMODORO,
-    BREATHING
+    BREATHING,
+    SETTINGS
 };
 
 Screen currentScreen = MENU;
@@ -64,9 +67,14 @@ void displayMenu()
     menuPartialRefreshCount = 0;
 }
 
+void displaySettings()
+{
+    showSettings(selectedSetting);
+}
+
 void refreshMenuSelection()
 {
-    if (menuPartialRefreshCount >= MENU_PARTIALS_BEFORE_FULL_REFRESH)
+    if (menuPartialRefreshCount >= partialRefreshLimit(MENU_PARTIALS_BEFORE_FULL_REFRESH))
     {
         displayMenu();
         return;
@@ -112,7 +120,7 @@ void resetPomodoro()
 
 void refreshPomodoroTimer()
 {
-    if (pomodoroPartialRefreshCount >= POMODORO_PARTIALS_BEFORE_FULL_REFRESH)
+    if (pomodoroPartialRefreshCount >= partialRefreshLimit(POMODORO_PARTIALS_BEFORE_FULL_REFRESH))
     {
         displayPomodoro();
         return;
@@ -146,7 +154,7 @@ void updatePomodoroClock()
     else
     {
         pomodoroRemainingSeconds -= elapsedSeconds;
-        if (pomodoroLastRenderedSeconds - pomodoroRemainingSeconds >= POMODORO_REFRESH_INTERVAL_SECONDS)
+        if (pomodoroLastRenderedSeconds - pomodoroRemainingSeconds >= pomodoroRefreshIntervalSeconds())
         {
             refreshPomodoroTimer();
         }
@@ -217,7 +225,7 @@ void displayBreathing()
 
 void refreshBreathingPhase()
 {
-    if (breathingPartialRefreshCount >= BREATHING_PARTIALS_BEFORE_FULL_REFRESH)
+    if (breathingPartialRefreshCount >= partialRefreshLimit(BREATHING_PARTIALS_BEFORE_FULL_REFRESH))
     {
         displayBreathing();
         return;
@@ -305,10 +313,15 @@ void openSelectedApp()
         currentScreen = POMODORO;
         displayPomodoro();
     }
-    else
+    else if (selectedApp == 2)
     {
         currentScreen = BREATHING;
         displayBreathing();
+    }
+    else
+    {
+        currentScreen = SETTINGS;
+        displaySettings();
     }
 }
 
@@ -321,6 +334,7 @@ void returnToMenu()
 
 void initializeUI()
 {
+    initializeSettings();
     displayMenu();
 }
 
@@ -332,12 +346,12 @@ void updateUI()
     {
         if (event == INPUT_NEXT)
         {
-            selectedApp = (selectedApp + 1) % 3;
+            selectedApp = (selectedApp + 1) % NUM_LAUNCHER_APPS;
             refreshMenuSelection();
         }
         else if (event == INPUT_PREVIOUS)
         {
-            selectedApp = (selectedApp + 2) % 3;
+            selectedApp = (selectedApp + NUM_LAUNCHER_APPS - 1) % NUM_LAUNCHER_APPS;
             refreshMenuSelection();
         }
         else if (event == INPUT_PRESS)
@@ -430,6 +444,45 @@ void updateUI()
                 breathingPhaseStartedAt = millis();
                 displayBreathing();
             }
+        }
+        else if (event == INPUT_LONG_PRESS)
+        {
+            returnToMenu();
+        }
+        return;
+    }
+
+    if (currentScreen == SETTINGS)
+    {
+        if (event == INPUT_NEXT)
+        {
+            selectedSetting = (selectedSetting + 1) % NUM_SETTINGS_ITEMS;
+            displaySettings();
+        }
+        else if (event == INPUT_PREVIOUS)
+        {
+            selectedSetting = (selectedSetting + NUM_SETTINGS_ITEMS - 1) % NUM_SETTINGS_ITEMS;
+            displaySettings();
+        }
+        else if (event == INPUT_PRESS)
+        {
+            if (selectedSetting == 0)
+            {
+                cycleTextSize();
+            }
+            else if (selectedSetting == 1)
+            {
+                cycleRefreshStyle();
+            }
+            else if (selectedSetting == 2)
+            {
+                toggleNavigationHints();
+            }
+            else
+            {
+                resetSettings();
+            }
+            displaySettings();
         }
         else if (event == INPUT_LONG_PRESS)
         {
