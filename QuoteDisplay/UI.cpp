@@ -16,6 +16,7 @@ uint16_t pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
 unsigned long pomodoroLastTick = 0;
 uint8_t pomodoroPartialRefreshCount = 0;
+uint8_t menuPartialRefreshCount = 0;
 uint8_t breathingPhase = 0;
 uint8_t breathingCurrentRound = 1;
 uint8_t breathingTotalRounds = BREATHING_DEFAULT_ROUNDS;
@@ -60,6 +61,19 @@ void displayCurrentQuote()
 void displayMenu()
 {
     showMainMenu(selectedApp);
+    menuPartialRefreshCount = 0;
+}
+
+void refreshMenuSelection()
+{
+    if (menuPartialRefreshCount >= MENU_PARTIALS_BEFORE_FULL_REFRESH)
+    {
+        displayMenu();
+        return;
+    }
+
+    updateMainMenuSelection(selectedApp);
+    ++menuPartialRefreshCount;
 }
 
 void displayPomodoro()
@@ -319,12 +333,12 @@ void updateUI()
         if (event == INPUT_NEXT)
         {
             selectedApp = (selectedApp + 1) % 3;
-            displayMenu();
+            refreshMenuSelection();
         }
         else if (event == INPUT_PREVIOUS)
         {
             selectedApp = (selectedApp + 2) % 3;
-            displayMenu();
+            refreshMenuSelection();
         }
         else if (event == INPUT_PRESS)
         {

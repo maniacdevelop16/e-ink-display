@@ -46,6 +46,19 @@ void drawMenuItem(const char* label, int y, bool selected)
     display.println(label);
 }
 
+void drawMenuContent(uint8_t selectedApp)
+{
+    const char* apps[] = { "QUOTE DISPLAY", "POMODORO", "BOX BREATHING" };
+    const char* descriptions[] = { "Browse daily quotes", "Focus timer: 25 minutes", "Guided 4-4-4-4 breathing" };
+
+    display.setTextColor(GxEPD_BLACK);
+    display.setFont(&FreeMonoBold9pt7b);
+    drawMenuItem(apps[0], 118, selectedApp == 0);
+    drawMenuItem(apps[1], 156, selectedApp == 1);
+    drawMenuItem(apps[2], 194, selectedApp == 2);
+    drawCenteredText(descriptions[selectedApp], 230);
+}
+
 void drawPomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status)
 {
     const uint16_t minutes = remainingSeconds / 60;
@@ -180,9 +193,6 @@ void showQuote(uint8_t index)
 
 void showMainMenu(uint8_t selectedApp)
 {
-    const char* apps[] = { "QUOTE DISPLAY", "POMODORO", "BOX BREATHING" };
-    const char* descriptions[] = { "Browse daily quotes", "Focus timer: 25 minutes", "Guided 4-4-4-4 breathing" };
-
     display.setRotation(0);
     display.setFullWindow();
     display.firstPage();
@@ -194,14 +204,26 @@ void showMainMenu(uint8_t selectedApp)
         display.setFont(&FreeMonoBold12pt7b);
         drawCenteredText("YOUR QUIET SPACE", 50);
         display.drawLine(80, 72, DISPLAY_WIDTH - 80, 72, GxEPD_BLACK);
+        drawMenuContent(selectedApp);
         display.setFont(&FreeMonoBold9pt7b);
-        drawMenuItem(apps[0], 118, selectedApp == 0);
-        drawMenuItem(apps[1], 156, selectedApp == 1);
-        drawMenuItem(apps[2], 194, selectedApp == 2);
-        drawCenteredText(descriptions[selectedApp], 230);
         drawCenteredText("UP / DOWN  TO EXPLORE", 266);
         drawCenteredText("PRESS  TO BEGIN", 288);
     } while (display.nextPage());
+}
+
+void updateMainMenuSelection(uint8_t selectedApp)
+{
+    display.setRotation(0);
+    display.setPartialWindow(0, MENU_DYNAMIC_Y, DISPLAY_WIDTH, MENU_DYNAMIC_HEIGHT);
+    display.firstPage();
+
+    do
+    {
+        display.fillRect(0, MENU_DYNAMIC_Y, DISPLAY_WIDTH, MENU_DYNAMIC_HEIGHT, GxEPD_WHITE);
+        drawMenuContent(selectedApp);
+    } while (display.nextPage());
+
+    display.setFullWindow();
 }
 
 void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status, const char* action)

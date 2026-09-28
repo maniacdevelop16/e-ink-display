@@ -31,6 +31,9 @@ constexpr int COUNTER_Y = 285;
 constexpr int HEADER_HEIGHT = 48;
 constexpr int MENU_LEFT_MARGIN = 22;
 constexpr int MENU_ITEM_HEIGHT = 32;
+constexpr uint8_t MENU_PARTIALS_BEFORE_FULL_REFRESH = 8;
+constexpr int MENU_DYNAMIC_Y = 94;
+constexpr int MENU_DYNAMIC_HEIGHT = 148;
 
 // Pomodoro behavior. The periodic refresh is intentionally conservative for e-paper.
 constexpr uint16_t POMODORO_DURATION_SECONDS = 25 * 60;
