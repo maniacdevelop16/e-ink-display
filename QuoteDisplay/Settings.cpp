@@ -59,6 +59,11 @@ const char* refreshStyleLabel()
     return settings.refreshStyle == REFRESH_GENTLE ? "GENTLE" : "RESPONSIVE";
 }
 
+bool usePartialRefresh()
+{
+    return settings.partialRefreshEnabled;
+}
+
 uint16_t pomodoroRefreshIntervalSeconds()
 {
     return settings.refreshStyle == REFRESH_GENTLE ? POMODORO_REFRESH_INTERVAL_SECONDS : 10;

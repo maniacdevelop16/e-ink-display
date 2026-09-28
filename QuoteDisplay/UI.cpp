@@ -74,7 +74,7 @@ void displaySettings()
 
 void refreshMenuSelection()
 {
-    if (!getSettings().partialRefreshEnabled)
+    if (!usePartialRefresh())
     {
         displayMenu();
         return;
@@ -126,7 +126,7 @@ void resetPomodoro()
 
 void refreshPomodoroTimer()
 {
-    if (!getSettings().partialRefreshEnabled)
+    if (!usePartialRefresh())
     {
         displayPomodoro();
         return;
@@ -237,7 +237,7 @@ void displayBreathing()
 
 void refreshBreathingPhase()
 {
-    if (!getSettings().partialRefreshEnabled)
+    if (!usePartialRefresh())
     {
         displayBreathing();
         return;

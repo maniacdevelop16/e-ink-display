@@ -35,5 +35,7 @@ void resetSettings();
 
 const char* fontChoiceLabel();
 const char* refreshStyleLabel();
+// Future pages should use these helpers instead of local display preferences.
+bool usePartialRefresh();
 uint16_t pomodoroRefreshIntervalSeconds();
 uint8_t partialRefreshLimit(uint8_t defaultLimit);

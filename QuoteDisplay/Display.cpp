@@ -8,6 +8,7 @@
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSans18pt7b.h>
+#include <Fonts/FreeSerif9pt7b.h>
 #include <Fonts/FreeSerif12pt7b.h>
 #include <Fonts/FreeSerif18pt7b.h>
 
@@ -37,46 +38,12 @@ void drawCenteredText(const char* text, int y)
 
 void setReadingFont()
 {
-    switch (getSettings().fontChoice)
-    {
-        case FONT_MONO_COMPACT:
-            display.setFont(&FreeMonoBold9pt7b);
-            break;
-        case FONT_MONO_COMFORT:
-            display.setFont(&FreeMonoBold12pt7b);
-            break;
-        case FONT_SANS_COMPACT:
-            display.setFont(&FreeSans9pt7b);
-            break;
-        case FONT_SANS_COMFORT:
-            display.setFont(&FreeSans12pt7b);
-            break;
-        case FONT_SERIF_READER:
-            display.setFont(&FreeSerif12pt7b);
-            break;
-    }
+    applyGlobalFont(GLOBAL_FONT_BODY);
 }
 
 void setPrimaryFont()
 {
-    switch (getSettings().fontChoice)
-    {
-        case FONT_MONO_COMPACT:
-            display.setFont(&FreeMonoBold12pt7b);
-            break;
-        case FONT_MONO_COMFORT:
-            display.setFont(&FreeMonoBold18pt7b);
-            break;
-        case FONT_SANS_COMPACT:
-            display.setFont(&FreeSans12pt7b);
-            break;
-        case FONT_SANS_COMFORT:
-            display.setFont(&FreeSans18pt7b);
-            break;
-        case FONT_SERIF_READER:
-            display.setFont(&FreeSerif18pt7b);
-            break;
-    }
+    applyGlobalFont(GLOBAL_FONT_PRIMARY);
 }
 
 void drawMenuItem(const char* label, int y, bool selected)
@@ -107,7 +74,7 @@ void drawMenuContent(uint8_t selectedApp)
     };
 
     display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeMonoBold9pt7b);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
     drawMenuItem(apps[0], 108, selectedApp == 0);
     drawMenuItem(apps[1], 138, selectedApp == 1);
     drawMenuItem(apps[2], 168, selectedApp == 2);
@@ -192,6 +159,31 @@ void drawBreathingContent(uint8_t phase, uint8_t currentRound, uint8_t totalRoun
 }
 }
 
+void applyGlobalFont(GlobalFontRole role)
+{
+    const bool primary = role == GLOBAL_FONT_PRIMARY;
+    const bool small = role == GLOBAL_FONT_SMALL;
+
+    switch (getSettings().fontChoice)
+    {
+        case FONT_MONO_COMPACT:
+            display.setFont(primary ? &FreeMonoBold12pt7b : &FreeMonoBold9pt7b);
+            break;
+        case FONT_MONO_COMFORT:
+            display.setFont(primary ? &FreeMonoBold18pt7b : &FreeMonoBold12pt7b);
+            break;
+        case FONT_SANS_COMPACT:
+            display.setFont(primary ? &FreeSans12pt7b : &FreeSans9pt7b);
+            break;
+        case FONT_SANS_COMFORT:
+            display.setFont(primary ? &FreeSans18pt7b : &FreeSans12pt7b);
+            break;
+        case FONT_SERIF_READER:
+            display.setFont(primary ? &FreeSerif18pt7b : (small ? &FreeSerif9pt7b : &FreeSerif12pt7b));
+            break;
+    }
+}
+
 void initializeDisplay()
 {
     pinMode(EPD_POWER, OUTPUT);
@@ -216,7 +208,7 @@ void showQuote(uint8_t index)
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
 
-        display.setFont(&FreeMonoBold9pt7b);
+        applyGlobalFont(GLOBAL_FONT_SMALL);
         drawCenteredText("A QUIET THOUGHT", 36);
         display.drawLine(82, 56, DISPLAY_WIDTH - 82, 56, GxEPD_BLACK);
 
@@ -230,7 +222,7 @@ void showQuote(uint8_t index)
 
         char authorText[50];
         snprintf(authorText, sizeof(authorText), "- %s", quote.author);
-        display.setFont(&FreeMonoBold9pt7b);
+        applyGlobalFont(GLOBAL_FONT_SMALL);
         drawCenteredText(authorText, 214);
         display.drawLine(104, 234, DISPLAY_WIDTH - 104, 234, GxEPD_BLACK);
 
@@ -269,7 +261,7 @@ void showMainMenu(uint8_t selectedApp)
         drawMenuContent(selectedApp);
         if (getSettings().showNavigationHints)
         {
-            display.setFont(&FreeMonoBold9pt7b);
+            applyGlobalFont(GLOBAL_FONT_SMALL);
             drawCenteredText("UP / DOWN  TO EXPLORE", 266);
             drawCenteredText("PRESS  TO BEGIN", 288);
         }
@@ -315,7 +307,7 @@ void showSettings(uint8_t selectedSetting)
         display.setTextColor(GxEPD_BLACK);
         setReadingFont();
         drawCenteredText("GLOBAL SETTINGS", 44);
-        display.setFont(&FreeMonoBold9pt7b);
+        applyGlobalFont(GLOBAL_FONT_SMALL);
         drawCenteredText("APPLIES TO EVERY APP", 70);
         display.drawLine(84, 84, DISPLAY_WIDTH - 84, 84, GxEPD_BLACK);
         drawMenuItem(rows[0], 106, selectedSetting == 0);

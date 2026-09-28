@@ -3,6 +3,16 @@
 #include <Arduino.h>
 #include "Quotes.h"
 
+enum GlobalFontRole
+{
+    GLOBAL_FONT_SMALL,
+    GLOBAL_FONT_BODY,
+    GLOBAL_FONT_PRIMARY
+};
+
+// Use this for every new page so the Global Settings font choice always applies.
+void applyGlobalFont(GlobalFontRole role);
+
 void initializeDisplay();
 void showQuote(uint8_t index);
 void showMainMenu(uint8_t selectedApp);
