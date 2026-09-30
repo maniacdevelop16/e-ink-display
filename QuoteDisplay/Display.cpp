@@ -160,7 +160,7 @@ void drawBreathingContent(uint8_t phase, uint8_t currentRound, uint8_t totalRoun
 
 void drawQuoteLines(const Quote& quote, int firstLineY, int lineSpacing)
 {
-    setReadingFont();
+    setPrimaryFont();
     drawCenteredText(quote.line1, firstLineY);
     drawCenteredText(quote.line2, firstLineY + lineSpacing);
     drawCenteredText(quote.line3, firstLineY + (lineSpacing * 2));
@@ -170,7 +170,7 @@ void drawQuoteNavigation(int firstLineY, int secondLineY)
 {
     if (getSettings().showNavigationHints)
     {
-        applyGlobalFont(GLOBAL_FONT_SMALL);
+        applyGlobalFont(GLOBAL_FONT_MICRO);
         drawCenteredText("UP / DOWN  TO BROWSE", firstLineY);
         drawCenteredText("PRESS MENU  HOLD OPTIONS", secondLineY);
     }
@@ -180,7 +180,7 @@ void drawQuietQuote(const Quote& quote, uint8_t index)
 {
     display.fillScreen(GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
-    applyGlobalFont(GLOBAL_FONT_SMALL);
+    applyGlobalFont(GLOBAL_FONT_MICRO);
     drawCenteredText("A QUIET THOUGHT", 36);
     display.drawLine(82, 56, DISPLAY_WIDTH - 82, 56, GxEPD_BLACK);
     display.drawLine(58, 84, 58, 186, GxEPD_BLACK);
@@ -189,7 +189,7 @@ void drawQuietQuote(const Quote& quote, uint8_t index)
 
     char authorText[50];
     snprintf(authorText, sizeof(authorText), "- %s", quote.author);
-    applyGlobalFont(GLOBAL_FONT_SMALL);
+    applyGlobalFont(GLOBAL_FONT_MICRO);
     drawCenteredText(authorText, 214);
     display.drawLine(104, 234, DISPLAY_WIDTH - 104, 234, GxEPD_BLACK);
 
@@ -204,14 +204,14 @@ void drawMinimalQuote(const Quote& quote, uint8_t index)
 {
     display.fillScreen(GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
-    applyGlobalFont(GLOBAL_FONT_SMALL);
+    applyGlobalFont(GLOBAL_FONT_MICRO);
     drawCenteredText("QUOTE", 34);
     display.drawLine(120, 50, DISPLAY_WIDTH - 120, 50, GxEPD_BLACK);
     drawQuoteLines(quote, 120, 32);
 
     char authorText[50];
     snprintf(authorText, sizeof(authorText), "- %s", quote.author);
-    applyGlobalFont(GLOBAL_FONT_SMALL);
+    applyGlobalFont(GLOBAL_FONT_MICRO);
     drawCenteredText(authorText, 210);
 
     char counter[22];
@@ -226,7 +226,7 @@ void drawFocusQuote(const Quote& quote, uint8_t index)
     display.fillScreen(GxEPD_WHITE);
     display.fillRect(0, 0, DISPLAY_WIDTH, 44, GxEPD_BLACK);
     display.setTextColor(GxEPD_WHITE);
-    applyGlobalFont(GLOBAL_FONT_SMALL);
+    applyGlobalFont(GLOBAL_FONT_MICRO);
     drawCenteredText("FOCUS", 30);
 
     display.setTextColor(GxEPD_BLACK);
@@ -235,7 +235,7 @@ void drawFocusQuote(const Quote& quote, uint8_t index)
 
     char authorText[50];
     snprintf(authorText, sizeof(authorText), "- %s", quote.author);
-    applyGlobalFont(GLOBAL_FONT_SMALL);
+    applyGlobalFont(GLOBAL_FONT_MICRO);
     drawCenteredText(authorText, 212);
 
     display.fillRect(0, 244, DISPLAY_WIDTH, 56, GxEPD_BLACK);
@@ -255,6 +255,7 @@ void drawFocusQuote(const Quote& quote, uint8_t index)
 void applyGlobalFont(GlobalFontRole role)
 {
     const bool primary = role == GLOBAL_FONT_PRIMARY;
+    const bool micro = role == GLOBAL_FONT_MICRO;
     const bool small = role == GLOBAL_FONT_SMALL;
 
     switch (getSettings().fontChoice)
@@ -263,16 +264,16 @@ void applyGlobalFont(GlobalFontRole role)
             display.setFont(primary ? &FreeMonoBold12pt7b : &FreeMonoBold9pt7b);
             break;
         case FONT_MONO_COMFORT:
-            display.setFont(primary ? &FreeMonoBold18pt7b : &FreeMonoBold12pt7b);
+            display.setFont(primary ? &FreeMonoBold18pt7b : (micro ? &FreeMonoBold9pt7b : &FreeMonoBold12pt7b));
             break;
         case FONT_SANS_COMPACT:
             display.setFont(primary ? &FreeSans12pt7b : &FreeSans9pt7b);
             break;
         case FONT_SANS_COMFORT:
-            display.setFont(primary ? &FreeSans18pt7b : &FreeSans12pt7b);
+            display.setFont(primary ? &FreeSans18pt7b : (micro ? &FreeSans9pt7b : &FreeSans12pt7b));
             break;
         case FONT_SERIF_READER:
-            display.setFont(primary ? &FreeSerif18pt7b : (small ? &FreeSerif9pt7b : &FreeSerif12pt7b));
+            display.setFont(primary ? &FreeSerif18pt7b : (micro || small ? &FreeSerif9pt7b : &FreeSerif12pt7b));
             break;
     }
 }

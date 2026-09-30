@@ -5,6 +5,7 @@
 
 enum GlobalFontRole
 {
+    GLOBAL_FONT_MICRO,
     GLOBAL_FONT_SMALL,
     GLOBAL_FONT_BODY,
     GLOBAL_FONT_PRIMARY
