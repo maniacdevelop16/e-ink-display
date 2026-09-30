@@ -1,17 +1,59 @@
 #include "Settings.h"
 
+#include <Preferences.h>
+
 #include "Config.h"
 
 namespace
 {
 GlobalSettings settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true };
 QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET };
+Preferences preferences;
+bool preferencesReady = false;
+
+void saveGlobalSettings()
+{
+    if (!preferencesReady)
+    {
+        return;
+    }
+
+    preferences.putUChar("font", settings.fontChoice);
+    preferences.putUChar("fontSize", settings.fontSize);
+    preferences.putUChar("refresh", settings.refreshStyle);
+    preferences.putBool("partial", settings.partialRefreshEnabled);
+}
+
+void saveQuoteSettings()
+{
+    if (!preferencesReady)
+    {
+        return;
+    }
+
+    preferences.putULong("quoteTime", quoteSettings.autoChangeIntervalSeconds);
+    preferences.putUChar("quoteTheme", quoteSettings.theme);
+}
 }
 
 void initializeSettings()
 {
-    resetSettings();
-    resetQuoteDisplaySettings();
+    preferencesReady = preferences.begin("quietspace", false);
+    if (!preferencesReady)
+    {
+        return;
+    }
+
+    const uint8_t savedFont = preferences.getUChar("font", FONT_MONO_COMFORT);
+    const uint8_t savedFontSize = preferences.getUChar("fontSize", FONT_SIZE_MEDIUM);
+    const uint8_t savedRefresh = preferences.getUChar("refresh", REFRESH_GENTLE);
+    const uint8_t savedTheme = preferences.getUChar("quoteTheme", QUOTE_THEME_QUIET);
+    settings.fontChoice = static_cast<FontChoice>(savedFont < 5 ? savedFont : FONT_MONO_COMFORT);
+    settings.fontSize = static_cast<FontSize>(savedFontSize < 3 ? savedFontSize : FONT_SIZE_MEDIUM);
+    settings.refreshStyle = static_cast<RefreshStyle>(savedRefresh < 2 ? savedRefresh : REFRESH_GENTLE);
+    settings.partialRefreshEnabled = preferences.getBool("partial", true);
+    quoteSettings.autoChangeIntervalSeconds = preferences.getULong("quoteTime", 0);
+    quoteSettings.theme = static_cast<QuoteTheme>(savedTheme < 3 ? savedTheme : QUOTE_THEME_QUIET);
 }
 
 const GlobalSettings& getSettings()
@@ -22,26 +64,31 @@ const GlobalSettings& getSettings()
 void cycleFontChoice()
 {
     settings.fontChoice = static_cast<FontChoice>((settings.fontChoice + 1) % 5);
+    saveGlobalSettings();
 }
 
 void cycleFontSize()
 {
     settings.fontSize = static_cast<FontSize>((settings.fontSize + 1) % 3);
+    saveGlobalSettings();
 }
 
 void cycleRefreshStyle()
 {
     settings.refreshStyle = settings.refreshStyle == REFRESH_GENTLE ? REFRESH_RESPONSIVE : REFRESH_GENTLE;
+    saveGlobalSettings();
 }
 
 void togglePartialRefresh()
 {
     settings.partialRefreshEnabled = !settings.partialRefreshEnabled;
+    saveGlobalSettings();
 }
 
 void resetSettings()
 {
     settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true };
+    saveGlobalSettings();
 }
 
 const char* fontChoiceLabel()
@@ -100,16 +147,19 @@ void cycleQuoteChangeInterval()
         index = 0;
     }
     quoteSettings.autoChangeIntervalSeconds = intervals[(index + 1) % 7];
+    saveQuoteSettings();
 }
 
 void cycleQuoteTheme()
 {
     quoteSettings.theme = static_cast<QuoteTheme>((quoteSettings.theme + 1) % 3);
+    saveQuoteSettings();
 }
 
 void resetQuoteDisplaySettings()
 {
     quoteSettings = { 0, QUOTE_THEME_QUIET };
+    saveQuoteSettings();
 }
 
 const char* quoteChangeIntervalLabel()
@@ -130,4 +180,31 @@ const char* quoteThemeLabel()
 {
     const char* labels[] = { "QUIET", "MINIMAL", "FOCUS" };
     return labels[quoteSettings.theme];
+}
+
+uint8_t savedScreen()
+{
+    return preferencesReady ? preferences.getUChar("screen", 0) : 0;
+}
+
+uint8_t savedQuote()
+{
+    return preferencesReady ? preferences.getUChar("quote", 0) : 0;
+}
+
+uint8_t savedLauncherSelection()
+{
+    return preferencesReady ? preferences.getUChar("launcher", 0) : 0;
+}
+
+void saveResumeState(uint8_t screen, uint8_t quote, uint8_t launcherSelection)
+{
+    if (!preferencesReady)
+    {
+        return;
+    }
+
+    preferences.putUChar("screen", screen);
+    preferences.putUChar("quote", quote);
+    preferences.putUChar("launcher", launcherSelection);
 }

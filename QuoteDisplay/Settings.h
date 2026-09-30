@@ -67,3 +67,9 @@ void cycleQuoteTheme();
 void resetQuoteDisplaySettings();
 const char* quoteChangeIntervalLabel();
 const char* quoteThemeLabel();
+
+// Small device state is stored in the ESP32's built-in flash (NVS).
+uint8_t savedScreen();
+uint8_t savedQuote();
+uint8_t savedLauncherSelection();
+void saveResumeState(uint8_t screen, uint8_t quote, uint8_t launcherSelection);

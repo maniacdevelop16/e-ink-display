@@ -41,6 +41,11 @@ enum Screen
 
 Screen currentScreen = MENU;
 
+void saveCurrentView()
+{
+    saveResumeState(static_cast<uint8_t>(currentScreen), currentQuote, selectedApp);
+}
+
 enum PomodoroState
 {
     POMODORO_READY,
@@ -65,6 +70,7 @@ void displayCurrentQuote()
 {
     showQuote(currentQuote);
     quoteLastChangedAt = millis();
+    saveCurrentView();
 }
 
 void displayQuoteSettings()
@@ -93,6 +99,7 @@ void updateQuoteChangeTimer()
     currentQuote = (currentQuote + changes) % NUM_QUOTES;
     quoteLastChangedAt += changes * intervalMs;
     showQuote(currentQuote);
+    saveCurrentView();
 }
 
 void displayMenu()
@@ -388,12 +395,14 @@ void openSelectedApp()
         currentScreen = SETTINGS;
         displaySettings();
     }
+    saveCurrentView();
 }
 
 void returnToMenu()
 {
     currentScreen = MENU;
     displayMenu();
+    saveCurrentView();
 }
 
 void goBack()
@@ -413,7 +422,35 @@ void goBack()
 void initializeUI()
 {
     initializeSettings();
-    displayMenu();
+    currentQuote = savedQuote() < NUM_QUOTES ? savedQuote() : 0;
+    selectedApp = savedLauncherSelection() < NUM_LAUNCHER_APPS ? savedLauncherSelection() : 0;
+    const uint8_t previousScreen = savedScreen();
+    currentScreen = previousScreen <= SETTINGS ? static_cast<Screen>(previousScreen) : MENU;
+
+    if (currentScreen == QUOTE_DISPLAY)
+    {
+        displayCurrentQuote();
+    }
+    else if (currentScreen == QUOTE_SETTINGS)
+    {
+        displayQuoteSettings();
+    }
+    else if (currentScreen == POMODORO)
+    {
+        displayPomodoro();
+    }
+    else if (currentScreen == BREATHING)
+    {
+        displayBreathing();
+    }
+    else if (currentScreen == SETTINGS)
+    {
+        displaySettings();
+    }
+    else
+    {
+        displayMenu();
+    }
 }
 
 void updateUI()
@@ -441,11 +478,13 @@ void updateUI()
         {
             selectedApp = (selectedApp + 1) % NUM_LAUNCHER_APPS;
             refreshMenuSelection();
+            saveCurrentView();
         }
         else if (event == INPUT_PREVIOUS)
         {
             selectedApp = (selectedApp + NUM_LAUNCHER_APPS - 1) % NUM_LAUNCHER_APPS;
             refreshMenuSelection();
+            saveCurrentView();
         }
         else if (event == INPUT_PRESS)
         {
@@ -471,6 +510,7 @@ void updateUI()
         else if (event == INPUT_PRESS)
         {
             currentScreen = QUOTE_SETTINGS;
+            saveCurrentView();
             displayQuoteSettings();
         }
         return;
