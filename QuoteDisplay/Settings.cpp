@@ -4,7 +4,7 @@
 
 namespace
 {
-GlobalSettings settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true, true };
+GlobalSettings settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true };
 QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET };
 }
 
@@ -34,14 +34,9 @@ void togglePartialRefresh()
     settings.partialRefreshEnabled = !settings.partialRefreshEnabled;
 }
 
-void toggleNavigationHints()
-{
-    settings.showNavigationHints = !settings.showNavigationHints;
-}
-
 void resetSettings()
 {
-    settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true, true };
+    settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true };
 }
 
 const char* fontChoiceLabel()

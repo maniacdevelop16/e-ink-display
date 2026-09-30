@@ -21,6 +21,8 @@ uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
 unsigned long pomodoroLastTick = 0;
 uint8_t pomodoroPartialRefreshCount = 0;
 uint8_t menuPartialRefreshCount = 0;
+uint8_t quoteSettingsPartialRefreshCount = 0;
+uint8_t settingsPartialRefreshCount = 0;
 uint8_t breathingPhase = 0;
 uint8_t breathingCurrentRound = 1;
 uint8_t breathingTotalRounds = BREATHING_DEFAULT_ROUNDS;
@@ -68,6 +70,7 @@ void displayCurrentQuote()
 void displayQuoteSettings()
 {
     showQuoteSettings(selectedQuoteSetting);
+    quoteSettingsPartialRefreshCount = 0;
 }
 
 void updateQuoteChangeTimer()
@@ -101,6 +104,33 @@ void displayMenu()
 void displaySettings()
 {
     showSettings(selectedSetting);
+    settingsPartialRefreshCount = 0;
+}
+
+void refreshQuoteSettings()
+{
+    if (!usePartialRefresh() || quoteSettingsPartialRefreshCount >=
+        partialRefreshLimit(SETTINGS_PARTIALS_BEFORE_FULL_REFRESH))
+    {
+        displayQuoteSettings();
+        return;
+    }
+
+    updateQuoteSettingsSelection(selectedQuoteSetting);
+    ++quoteSettingsPartialRefreshCount;
+}
+
+void refreshSettings()
+{
+    if (!usePartialRefresh() || settingsPartialRefreshCount >=
+        partialRefreshLimit(SETTINGS_PARTIALS_BEFORE_FULL_REFRESH))
+    {
+        displaySettings();
+        return;
+    }
+
+    updateSettingsSelection(selectedSetting);
+    ++settingsPartialRefreshCount;
 }
 
 void refreshMenuSelection()
@@ -124,25 +154,21 @@ void refreshMenuSelection()
 void displayPomodoro()
 {
     const char* status = "READY TO FOCUS";
-    const char* action = "PRESS TO START";
 
     if (pomodoroState == POMODORO_RUNNING)
     {
         status = "FOCUS IN PROGRESS";
-        action = "PRESS TO PAUSE";
     }
     else if (pomodoroState == POMODORO_PAUSED)
     {
         status = "PAUSED";
-        action = "PRESS TO RESUME";
     }
     else if (pomodoroState == POMODORO_COMPLETE)
     {
         status = "SESSION COMPLETE";
-        action = "PRESS TO RESET";
     }
 
-    showPomodoro(pomodoroRemainingSeconds, pomodoroTotalSeconds, status, action);
+    showPomodoro(pomodoroRemainingSeconds, pomodoroTotalSeconds, status);
     pomodoroLastRenderedSeconds = pomodoroRemainingSeconds;
     pomodoroPartialRefreshCount = 0;
 }
@@ -224,7 +250,7 @@ void addPomodoroTime()
     displayPomodoro();
 }
 
-void getBreathingDisplayText(const char*& phaseLabel, const char*& status, const char*& action)
+void getBreathingDisplayText(const char*& phaseLabel, const char*& status)
 {
     const char* phaseLabels[] = { "INHALE", "HOLD", "EXHALE", "HOLD" };
     const char* phaseMessages[] = {
@@ -235,22 +261,14 @@ void getBreathingDisplayText(const char*& phaseLabel, const char*& status, const
     };
     phaseLabel = phaseLabels[breathingPhase];
     status = phaseMessages[breathingPhase];
-    action = "PRESS: BEGIN";
-
-    if (breathingState == BREATHING_RUNNING)
-    {
-        action = "PRESS: PAUSE";
-    }
-    else if (breathingState == BREATHING_PAUSED)
+    if (breathingState == BREATHING_PAUSED)
     {
         status = "PAUSED - TAKE YOUR TIME";
-        action = "PRESS: RESUME";
     }
     else if (breathingState == BREATHING_COMPLETE)
     {
         phaseLabel = "COMPLETE";
         status = "ALL ROUNDS FINISHED";
-        action = "PRESS: RESET";
     }
 }
 
@@ -258,11 +276,10 @@ void displayBreathing()
 {
     const char* phaseLabel;
     const char* status;
-    const char* action;
-    getBreathingDisplayText(phaseLabel, status, action);
+    getBreathingDisplayText(phaseLabel, status);
 
     showBreathing(breathingPhase, breathingCurrentRound, breathingTotalRounds,
-                  phaseLabel, status, action);
+                  phaseLabel, status);
     breathingPartialRefreshCount = 0;
 }
 
@@ -282,8 +299,7 @@ void refreshBreathingPhase()
 
     const char* phaseLabel;
     const char* status;
-    const char* action;
-    getBreathingDisplayText(phaseLabel, status, action);
+    getBreathingDisplayText(phaseLabel, status);
     updateBreathingPhase(breathingPhase, breathingCurrentRound, breathingTotalRounds,
                          phaseLabel, status);
     ++breathingPartialRefreshCount;
@@ -465,12 +481,12 @@ void updateUI()
         if (event == INPUT_NEXT)
         {
             selectedQuoteSetting = (selectedQuoteSetting + 1) % NUM_QUOTE_SETTINGS_ITEMS;
-            displayQuoteSettings();
+            refreshQuoteSettings();
         }
         else if (event == INPUT_PREVIOUS)
         {
             selectedQuoteSetting = (selectedQuoteSetting + NUM_QUOTE_SETTINGS_ITEMS - 1) % NUM_QUOTE_SETTINGS_ITEMS;
-            displayQuoteSettings();
+            refreshQuoteSettings();
         }
         else if (event == INPUT_PRESS)
         {
@@ -487,7 +503,7 @@ void updateUI()
                 resetQuoteDisplaySettings();
             }
             quoteLastChangedAt = millis();
-            displayQuoteSettings();
+            refreshQuoteSettings();
         }
         return;
     }
@@ -557,12 +573,12 @@ void updateUI()
         if (event == INPUT_NEXT)
         {
             selectedSetting = (selectedSetting + 1) % NUM_SETTINGS_ITEMS;
-            displaySettings();
+            refreshSettings();
         }
         else if (event == INPUT_PREVIOUS)
         {
             selectedSetting = (selectedSetting + NUM_SETTINGS_ITEMS - 1) % NUM_SETTINGS_ITEMS;
-            displaySettings();
+            refreshSettings();
         }
         else if (event == INPUT_PRESS)
         {
@@ -578,15 +594,18 @@ void updateUI()
             {
                 cycleRefreshStyle();
             }
-            else if (selectedSetting == 3)
-            {
-                toggleNavigationHints();
-            }
             else
             {
                 resetSettings();
             }
-            displaySettings();
+            if (selectedSetting == 0 || selectedSetting == 3)
+            {
+                displaySettings();
+            }
+            else
+            {
+                refreshSettings();
+            }
         }
         return;
     }

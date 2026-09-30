@@ -22,7 +22,6 @@ struct GlobalSettings
     FontChoice fontChoice;
     RefreshStyle refreshStyle;
     bool partialRefreshEnabled;
-    bool showNavigationHints;
 };
 
 enum QuoteTheme
@@ -43,7 +42,6 @@ const GlobalSettings& getSettings();
 void cycleFontChoice();
 void cycleRefreshStyle();
 void togglePartialRefresh();
-void toggleNavigationHints();
 void resetSettings();
 
 const char* fontChoiceLabel();

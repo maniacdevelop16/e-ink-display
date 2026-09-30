@@ -70,7 +70,7 @@ void drawMenuContent(uint8_t selectedApp)
         "Browse daily quotes",
         "Focus timer: 25 minutes",
         "Guided 4-4-4-4 breathing",
-        "Fonts, refresh, and hint options"
+        "Fonts and refresh options"
     };
 
     display.setTextColor(GxEPD_BLACK);
@@ -166,16 +166,6 @@ void drawQuoteLines(const Quote& quote, int firstLineY, int lineSpacing)
     drawCenteredText(quote.line3, firstLineY + (lineSpacing * 2));
 }
 
-void drawQuoteNavigation(int firstLineY, int secondLineY)
-{
-    if (getSettings().showNavigationHints)
-    {
-        applyGlobalFont(GLOBAL_FONT_SMALL);
-        drawCenteredText("UP/DOWN BROWSE  PRESS OPTIONS", firstLineY);
-        drawCenteredText("MENU HOME  EXIT BACK", secondLineY);
-    }
-}
-
 void drawQuietQuote(const Quote& quote, uint8_t index)
 {
     display.fillScreen(GxEPD_WHITE);
@@ -185,19 +175,18 @@ void drawQuietQuote(const Quote& quote, uint8_t index)
     display.drawLine(82, 56, DISPLAY_WIDTH - 82, 56, GxEPD_BLACK);
     display.drawLine(58, 84, 58, 186, GxEPD_BLACK);
     display.fillCircle(58, 84, 3, GxEPD_BLACK);
-    drawQuoteLines(quote, QUOTE_Y1, QUOTE_Y2 - QUOTE_Y1);
+    drawQuoteLines(quote, 118, 34);
 
     char authorText[50];
     snprintf(authorText, sizeof(authorText), "- %s", quote.author);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawCenteredText(authorText, 214);
-    display.drawLine(104, 234, DISPLAY_WIDTH - 104, 234, GxEPD_BLACK);
+    drawCenteredText(authorText, 230);
+    display.drawLine(104, 246, DISPLAY_WIDTH - 104, 246, GxEPD_BLACK);
 
     char counter[22];
     snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
              static_cast<unsigned int>(index + 1), static_cast<unsigned int>(NUM_QUOTES));
-    drawCenteredText(counter, 258);
-    drawQuoteNavigation(279, 297);
+    drawCenteredText(counter, 276);
 }
 
 void drawMinimalQuote(const Quote& quote, uint8_t index)
@@ -207,18 +196,17 @@ void drawMinimalQuote(const Quote& quote, uint8_t index)
     applyGlobalFont(GLOBAL_FONT_SMALL);
     drawCenteredText("QUOTE", 34);
     display.drawLine(120, 50, DISPLAY_WIDTH - 120, 50, GxEPD_BLACK);
-    drawQuoteLines(quote, 120, 32);
+    drawQuoteLines(quote, 116, 34);
 
     char authorText[50];
     snprintf(authorText, sizeof(authorText), "- %s", quote.author);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawCenteredText(authorText, 210);
+    drawCenteredText(authorText, 232);
 
     char counter[22];
     snprintf(counter, sizeof(counter), "%u / %u", static_cast<unsigned int>(index + 1),
              static_cast<unsigned int>(NUM_QUOTES));
-    drawCenteredText(counter, 248);
-    drawQuoteNavigation(274, 296);
+    drawCenteredText(counter, 276);
 }
 
 void drawFocusQuote(const Quote& quote, uint8_t index)
@@ -231,25 +219,52 @@ void drawFocusQuote(const Quote& quote, uint8_t index)
 
     display.setTextColor(GxEPD_BLACK);
     display.drawLine(70, 72, DISPLAY_WIDTH - 70, 72, GxEPD_BLACK);
-    drawQuoteLines(quote, 114, 32);
+    drawQuoteLines(quote, 116, 34);
 
     char authorText[50];
     snprintf(authorText, sizeof(authorText), "- %s", quote.author);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawCenteredText(authorText, 212);
+    drawCenteredText(authorText, 230);
+    display.drawLine(104, 246, DISPLAY_WIDTH - 104, 246, GxEPD_BLACK);
 
-    display.fillRect(0, 244, DISPLAY_WIDTH, 56, GxEPD_BLACK);
-    display.setTextColor(GxEPD_WHITE);
     char counter[22];
     snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
              static_cast<unsigned int>(index + 1), static_cast<unsigned int>(NUM_QUOTES));
-    drawCenteredText(counter, 266);
-    if (getSettings().showNavigationHints)
-    {
-        drawCenteredText("MENU HOME  EXIT BACK", 282);
-        drawCenteredText("UP/DOWN BROWSE  PRESS OPTIONS", 297);
-    }
+    drawCenteredText(counter, 276);
+}
+
+void drawQuoteSettingsContent(uint8_t selectedSetting)
+{
+    char timerRow[32];
+    char themeRow[32];
+    snprintf(timerRow, sizeof(timerRow), "AUTO CHANGE: %s", quoteChangeIntervalLabel());
+    snprintf(themeRow, sizeof(themeRow), "THEME: %s", quoteThemeLabel());
+    const char* rows[] = { timerRow, themeRow, "RESET QUOTE SETTINGS" };
+
     display.setTextColor(GxEPD_BLACK);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawMenuItem(rows[0], 122, selectedSetting == 0);
+    drawMenuItem(rows[1], 158, selectedSetting == 1);
+    drawMenuItem(rows[2], 194, selectedSetting == 2);
+}
+
+void drawSettingsContent(uint8_t selectedSetting)
+{
+    char fontRow[32];
+    char partialRow[32];
+    char refreshRow[32];
+    snprintf(fontRow, sizeof(fontRow), "FONT: %s", fontChoiceLabel());
+    snprintf(partialRow, sizeof(partialRow), "PARTIAL REFRESH: %s",
+             getSettings().partialRefreshEnabled ? "ON" : "OFF");
+    snprintf(refreshRow, sizeof(refreshRow), "REFRESH: %s", refreshStyleLabel());
+    const char* rows[] = { fontRow, partialRow, refreshRow, "RESET DEFAULTS" };
+
+    display.setTextColor(GxEPD_BLACK);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawMenuItem(rows[0], 112, selectedSetting == 0);
+    drawMenuItem(rows[1], 142, selectedSetting == 1);
+    drawMenuItem(rows[2], 172, selectedSetting == 2);
+    drawMenuItem(rows[3], 202, selectedSetting == 3);
 }
 }
 
@@ -323,12 +338,6 @@ void showQuote(uint8_t index)
 
 void showQuoteSettings(uint8_t selectedSetting)
 {
-    char timerRow[32];
-    char themeRow[32];
-    snprintf(timerRow, sizeof(timerRow), "AUTO CHANGE: %s", quoteChangeIntervalLabel());
-    snprintf(themeRow, sizeof(themeRow), "THEME: %s", quoteThemeLabel());
-    const char* rows[] = { timerRow, themeRow, "RESET QUOTE SETTINGS" };
-
     display.setRotation(0);
     display.setFullWindow();
     display.firstPage();
@@ -342,13 +351,23 @@ void showQuoteSettings(uint8_t selectedSetting)
         applyGlobalFont(GLOBAL_FONT_SMALL);
         drawCenteredText("PERSONALIZE APP 1", 70);
         display.drawLine(84, 84, DISPLAY_WIDTH - 84, 84, GxEPD_BLACK);
-        drawMenuItem(rows[0], 122, selectedSetting == 0);
-        drawMenuItem(rows[1], 158, selectedSetting == 1);
-        drawMenuItem(rows[2], 194, selectedSetting == 2);
-        drawCenteredText("UP / DOWN  SELECT", 250);
-        drawCenteredText("PRESS  CHANGE", 274);
-        drawCenteredText("EXIT BACK  MENU HOME", 296);
+        drawQuoteSettingsContent(selectedSetting);
     } while (display.nextPage());
+}
+
+void updateQuoteSettingsSelection(uint8_t selectedSetting)
+{
+    display.setRotation(0);
+    display.setPartialWindow(0, SETTINGS_DYNAMIC_Y, DISPLAY_WIDTH, SETTINGS_DYNAMIC_HEIGHT);
+    display.firstPage();
+
+    do
+    {
+        display.fillRect(0, SETTINGS_DYNAMIC_Y, DISPLAY_WIDTH, SETTINGS_DYNAMIC_HEIGHT, GxEPD_WHITE);
+        drawQuoteSettingsContent(selectedSetting);
+    } while (display.nextPage());
+
+    display.setFullWindow();
 }
 
 void showMainMenu(uint8_t selectedApp)
@@ -365,12 +384,6 @@ void showMainMenu(uint8_t selectedApp)
         drawCenteredText("YOUR QUIET SPACE", 50);
         display.drawLine(80, 72, DISPLAY_WIDTH - 80, 72, GxEPD_BLACK);
         drawMenuContent(selectedApp);
-        if (getSettings().showNavigationHints)
-        {
-            applyGlobalFont(GLOBAL_FONT_SMALL);
-            drawCenteredText("UP / DOWN  TO EXPLORE", 266);
-            drawCenteredText("PRESS  TO BEGIN", 288);
-        }
     } while (display.nextPage());
 }
 
@@ -391,18 +404,6 @@ void updateMainMenuSelection(uint8_t selectedApp)
 
 void showSettings(uint8_t selectedSetting)
 {
-    char fontRow[32];
-    char partialRow[32];
-    char refreshRow[32];
-    char hintsRow[32];
-    snprintf(fontRow, sizeof(fontRow), "FONT: %s", fontChoiceLabel());
-    snprintf(partialRow, sizeof(partialRow), "PARTIAL REFRESH: %s",
-             getSettings().partialRefreshEnabled ? "ON" : "OFF");
-    snprintf(refreshRow, sizeof(refreshRow), "REFRESH: %s", refreshStyleLabel());
-    snprintf(hintsRow, sizeof(hintsRow), "NAV HINTS: %s",
-             getSettings().showNavigationHints ? "SHOW" : "HIDE");
-    const char* rows[] = { fontRow, partialRow, refreshRow, hintsRow, "RESET DEFAULTS" };
-
     display.setRotation(0);
     display.setFullWindow();
     display.firstPage();
@@ -416,18 +417,26 @@ void showSettings(uint8_t selectedSetting)
         applyGlobalFont(GLOBAL_FONT_SMALL);
         drawCenteredText("APPLIES TO EVERY APP", 70);
         display.drawLine(84, 84, DISPLAY_WIDTH - 84, 84, GxEPD_BLACK);
-        drawMenuItem(rows[0], 106, selectedSetting == 0);
-        drawMenuItem(rows[1], 130, selectedSetting == 1);
-        drawMenuItem(rows[2], 154, selectedSetting == 2);
-        drawMenuItem(rows[3], 178, selectedSetting == 3);
-        drawMenuItem(rows[4], 202, selectedSetting == 4);
-        drawCenteredText("UP / DOWN  SELECT", 250);
-        drawCenteredText("PRESS  CHANGE", 274);
-        drawCenteredText("EXIT BACK  MENU HOME", 296);
+        drawSettingsContent(selectedSetting);
     } while (display.nextPage());
 }
 
-void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status, const char* action)
+void updateSettingsSelection(uint8_t selectedSetting)
+{
+    display.setRotation(0);
+    display.setPartialWindow(0, SETTINGS_DYNAMIC_Y, DISPLAY_WIDTH, SETTINGS_DYNAMIC_HEIGHT);
+    display.firstPage();
+
+    do
+    {
+        display.fillRect(0, SETTINGS_DYNAMIC_Y, DISPLAY_WIDTH, SETTINGS_DYNAMIC_HEIGHT, GxEPD_WHITE);
+        drawSettingsContent(selectedSetting);
+    } while (display.nextPage());
+
+    display.setFullWindow();
+}
+
+void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status)
 {
     display.setRotation(0);
     display.setFullWindow();
@@ -443,12 +452,6 @@ void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* 
         drawCenteredText("POMODORO", 34);
         display.setTextColor(GxEPD_BLACK);
         drawPomodoroTimer(remainingSeconds, totalSeconds, status);
-        if (getSettings().showNavigationHints)
-        {
-            drawCenteredText(action, 232);
-            drawCenteredText("UP: RESET    DOWN: +5 MIN", 260);
-            drawCenteredText("MENU: HOME    EXIT: BACK", 286);
-        }
     } while (display.nextPage());
 }
 
@@ -470,7 +473,7 @@ void updatePomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds)
 }
 
 void showBreathing(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
-                   const char* phaseLabel, const char* status, const char* action)
+                   const char* phaseLabel, const char* status)
 {
     display.setRotation(0);
     display.setFullWindow();
@@ -486,12 +489,6 @@ void showBreathing(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
         drawCenteredText("BOX BREATHING", 34);
         display.setTextColor(GxEPD_BLACK);
         drawBreathingContent(phase, currentRound, totalRounds, phaseLabel, status);
-        if (getSettings().showNavigationHints)
-        {
-            drawCenteredText(action, 254);
-            drawCenteredText("UP: RESET    DOWN: ROUNDS", 275);
-            drawCenteredText("MENU: HOME    EXIT: BACK", 296);
-        }
     } while (display.nextPage());
 }
 
