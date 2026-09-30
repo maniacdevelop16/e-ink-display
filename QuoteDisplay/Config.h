@@ -11,11 +11,13 @@ constexpr uint8_t EPD_SCK = 12;
 constexpr uint8_t EPD_MOSI = 11;
 constexpr uint8_t EPD_POWER = 7;
 
-// Rotary/button pins. Inputs use INPUT_PULLUP and are active LOW.
+// CrowPanel controls. Inputs use INPUT_PULLUP and are active LOW.
 // These mappings intentionally swap the physical UP and DOWN buttons.
 constexpr uint8_t ROTARY_UP = 4;
 constexpr uint8_t ROTARY_DOWN = 6;
 constexpr uint8_t ROTARY_PRESS = 5;
+constexpr uint8_t MENU_BUTTON = 2;
+constexpr uint8_t EXIT_BUTTON = 1;
 
 // Display layout
 constexpr int DISPLAY_WIDTH = 400;
@@ -61,4 +63,3 @@ constexpr int BREATHING_DYNAMIC_Y = 55;
 constexpr int BREATHING_DYNAMIC_HEIGHT = 185;
 
 constexpr unsigned long DEBOUNCE_TIME_MS = 80;
-constexpr unsigned long LONG_PRESS_TIME_MS = 800;

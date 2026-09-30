@@ -379,6 +379,19 @@ void returnToMenu()
     currentScreen = MENU;
     displayMenu();
 }
+
+void goBack()
+{
+    if (currentScreen == QUOTE_SETTINGS)
+    {
+        currentScreen = QUOTE_DISPLAY;
+        displayCurrentQuote();
+    }
+    else if (currentScreen != MENU)
+    {
+        returnToMenu();
+    }
+}
 }
 
 void initializeUI()
@@ -390,6 +403,21 @@ void initializeUI()
 void updateUI()
 {
     const InputEvent event = readInputEvent();
+
+    if (event == INPUT_MENU)
+    {
+        if (currentScreen != MENU)
+        {
+            returnToMenu();
+        }
+        return;
+    }
+
+    if (event == INPUT_EXIT)
+    {
+        goBack();
+        return;
+    }
 
     if (currentScreen == MENU)
     {
@@ -426,10 +454,6 @@ void updateUI()
         }
         else if (event == INPUT_PRESS)
         {
-            returnToMenu();
-        }
-        else if (event == INPUT_LONG_PRESS)
-        {
             currentScreen = QUOTE_SETTINGS;
             displayQuoteSettings();
         }
@@ -465,11 +489,6 @@ void updateUI()
             quoteLastChangedAt = millis();
             displayQuoteSettings();
         }
-        else if (event == INPUT_LONG_PRESS)
-        {
-            currentScreen = QUOTE_DISPLAY;
-            displayCurrentQuote();
-        }
         return;
     }
 
@@ -500,10 +519,6 @@ void updateUI()
                 displayPomodoro();
             }
         }
-        else if (event == INPUT_LONG_PRESS)
-        {
-            returnToMenu();
-        }
         return;
     }
 
@@ -533,10 +548,6 @@ void updateUI()
                 breathingPhaseStartedAt = millis();
                 displayBreathing();
             }
-        }
-        else if (event == INPUT_LONG_PRESS)
-        {
-            returnToMenu();
         }
         return;
     }
@@ -577,15 +588,6 @@ void updateUI()
             }
             displaySettings();
         }
-        else if (event == INPUT_LONG_PRESS)
-        {
-            returnToMenu();
-        }
         return;
-    }
-
-    if (event == INPUT_PRESS || event == INPUT_LONG_PRESS)
-    {
-        returnToMenu();
     }
 }

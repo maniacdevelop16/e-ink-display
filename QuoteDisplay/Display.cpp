@@ -171,8 +171,8 @@ void drawQuoteNavigation(int firstLineY, int secondLineY)
     if (getSettings().showNavigationHints)
     {
         applyGlobalFont(GLOBAL_FONT_SMALL);
-        drawCenteredText("UP / DOWN  TO BROWSE", firstLineY);
-        drawCenteredText("PRESS MENU  HOLD OPTIONS", secondLineY);
+        drawCenteredText("UP/DOWN BROWSE  PRESS OPTIONS", firstLineY);
+        drawCenteredText("MENU HOME  EXIT BACK", secondLineY);
     }
 }
 
@@ -246,7 +246,8 @@ void drawFocusQuote(const Quote& quote, uint8_t index)
     drawCenteredText(counter, 266);
     if (getSettings().showNavigationHints)
     {
-        drawCenteredText("UP/DOWN BROWSE  PRESS MENU", 292);
+        drawCenteredText("MENU HOME  EXIT BACK", 282);
+        drawCenteredText("UP/DOWN BROWSE  PRESS OPTIONS", 297);
     }
     display.setTextColor(GxEPD_BLACK);
 }
@@ -346,7 +347,7 @@ void showQuoteSettings(uint8_t selectedSetting)
         drawMenuItem(rows[2], 194, selectedSetting == 2);
         drawCenteredText("UP / DOWN  SELECT", 250);
         drawCenteredText("PRESS  CHANGE", 274);
-        drawCenteredText("HOLD  BACK", 296);
+        drawCenteredText("EXIT BACK  MENU HOME", 296);
     } while (display.nextPage());
 }
 
@@ -422,7 +423,7 @@ void showSettings(uint8_t selectedSetting)
         drawMenuItem(rows[4], 202, selectedSetting == 4);
         drawCenteredText("UP / DOWN  SELECT", 250);
         drawCenteredText("PRESS  CHANGE", 274);
-        drawCenteredText("HOLD  MENU", 296);
+        drawCenteredText("EXIT BACK  MENU HOME", 296);
     } while (display.nextPage());
 }
 
@@ -446,7 +447,7 @@ void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* 
         {
             drawCenteredText(action, 232);
             drawCenteredText("UP: RESET    DOWN: +5 MIN", 260);
-            drawCenteredText("HOLD: MENU", 286);
+            drawCenteredText("MENU: HOME    EXIT: BACK", 286);
         }
     } while (display.nextPage());
 }
@@ -489,7 +490,7 @@ void showBreathing(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
         {
             drawCenteredText(action, 254);
             drawCenteredText("UP: RESET    DOWN: ROUNDS", 275);
-            drawCenteredText("HOLD: MENU", 296);
+            drawCenteredText("MENU: HOME    EXIT: BACK", 296);
         }
     } while (display.nextPage());
 }

@@ -6,7 +6,8 @@ enum InputEvent
     INPUT_NEXT,
     INPUT_PREVIOUS,
     INPUT_PRESS,
-    INPUT_LONG_PRESS
+    INPUT_MENU,
+    INPUT_EXIT
 };
 
 void initializeInput();
