@@ -15,6 +15,7 @@ void applyGlobalFont(GlobalFontRole role);
 
 void initializeDisplay();
 void showQuote(uint8_t index);
+void showQuoteSettings(uint8_t selectedSetting);
 void showMainMenu(uint8_t selectedApp);
 void updateMainMenuSelection(uint8_t selectedApp);
 void showSettings(uint8_t selectedSetting);

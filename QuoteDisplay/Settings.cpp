@@ -5,11 +5,13 @@
 namespace
 {
 GlobalSettings settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true, true };
+QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET };
 }
 
 void initializeSettings()
 {
     resetSettings();
+    resetQuoteDisplaySettings();
 }
 
 const GlobalSettings& getSettings()
@@ -72,4 +74,54 @@ uint16_t pomodoroRefreshIntervalSeconds()
 uint8_t partialRefreshLimit(uint8_t defaultLimit)
 {
     return settings.refreshStyle == REFRESH_GENTLE ? defaultLimit : defaultLimit * 2;
+}
+
+const QuoteDisplaySettings& getQuoteDisplaySettings()
+{
+    return quoteSettings;
+}
+
+void cycleQuoteChangeInterval()
+{
+    const uint32_t intervals[] = { 0, 60, 180, 300, 600, 1800, 3600 };
+    uint8_t index = 0;
+    while (index < 7 && intervals[index] != quoteSettings.autoChangeIntervalSeconds)
+    {
+        ++index;
+    }
+    if (index == 7)
+    {
+        index = 0;
+    }
+    quoteSettings.autoChangeIntervalSeconds = intervals[(index + 1) % 7];
+}
+
+void cycleQuoteTheme()
+{
+    quoteSettings.theme = static_cast<QuoteTheme>((quoteSettings.theme + 1) % 3);
+}
+
+void resetQuoteDisplaySettings()
+{
+    quoteSettings = { 0, QUOTE_THEME_QUIET };
+}
+
+const char* quoteChangeIntervalLabel()
+{
+    const char* labels[] = { "OFF", "1 MIN", "3 MIN", "5 MIN", "10 MIN", "30 MIN", "1 HOUR" };
+    const uint32_t intervals[] = { 0, 60, 180, 300, 600, 1800, 3600 };
+    for (uint8_t index = 0; index < 7; ++index)
+    {
+        if (intervals[index] == quoteSettings.autoChangeIntervalSeconds)
+        {
+            return labels[index];
+        }
+    }
+    return "OFF";
+}
+
+const char* quoteThemeLabel()
+{
+    const char* labels[] = { "QUIET", "MINIMAL", "FOCUS" };
+    return labels[quoteSettings.theme];
 }

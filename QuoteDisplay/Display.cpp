@@ -157,6 +157,99 @@ void drawBreathingContent(uint8_t phase, uint8_t currentRound, uint8_t totalRoun
         }
     }
 }
+
+void drawQuoteLines(const Quote& quote, int firstLineY, int lineSpacing)
+{
+    setReadingFont();
+    drawCenteredText(quote.line1, firstLineY);
+    drawCenteredText(quote.line2, firstLineY + lineSpacing);
+    drawCenteredText(quote.line3, firstLineY + (lineSpacing * 2));
+}
+
+void drawQuoteNavigation(int firstLineY, int secondLineY)
+{
+    if (getSettings().showNavigationHints)
+    {
+        applyGlobalFont(GLOBAL_FONT_SMALL);
+        drawCenteredText("UP / DOWN  TO BROWSE", firstLineY);
+        drawCenteredText("PRESS MENU  HOLD OPTIONS", secondLineY);
+    }
+}
+
+void drawQuietQuote(const Quote& quote, uint8_t index)
+{
+    display.fillScreen(GxEPD_WHITE);
+    display.setTextColor(GxEPD_BLACK);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText("A QUIET THOUGHT", 36);
+    display.drawLine(82, 56, DISPLAY_WIDTH - 82, 56, GxEPD_BLACK);
+    display.drawLine(58, 84, 58, 186, GxEPD_BLACK);
+    display.fillCircle(58, 84, 3, GxEPD_BLACK);
+    drawQuoteLines(quote, QUOTE_Y1, QUOTE_Y2 - QUOTE_Y1);
+
+    char authorText[50];
+    snprintf(authorText, sizeof(authorText), "- %s", quote.author);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText(authorText, 214);
+    display.drawLine(104, 234, DISPLAY_WIDTH - 104, 234, GxEPD_BLACK);
+
+    char counter[22];
+    snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
+             static_cast<unsigned int>(index + 1), static_cast<unsigned int>(NUM_QUOTES));
+    drawCenteredText(counter, 258);
+    drawQuoteNavigation(279, 297);
+}
+
+void drawMinimalQuote(const Quote& quote, uint8_t index)
+{
+    display.fillScreen(GxEPD_WHITE);
+    display.setTextColor(GxEPD_BLACK);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText("QUOTE", 34);
+    display.drawLine(120, 50, DISPLAY_WIDTH - 120, 50, GxEPD_BLACK);
+    drawQuoteLines(quote, 120, 32);
+
+    char authorText[50];
+    snprintf(authorText, sizeof(authorText), "- %s", quote.author);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText(authorText, 210);
+
+    char counter[22];
+    snprintf(counter, sizeof(counter), "%u / %u", static_cast<unsigned int>(index + 1),
+             static_cast<unsigned int>(NUM_QUOTES));
+    drawCenteredText(counter, 248);
+    drawQuoteNavigation(274, 296);
+}
+
+void drawFocusQuote(const Quote& quote, uint8_t index)
+{
+    display.fillScreen(GxEPD_WHITE);
+    display.fillRect(0, 0, DISPLAY_WIDTH, 44, GxEPD_BLACK);
+    display.setTextColor(GxEPD_WHITE);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText("FOCUS", 30);
+
+    display.setTextColor(GxEPD_BLACK);
+    display.drawLine(70, 72, DISPLAY_WIDTH - 70, 72, GxEPD_BLACK);
+    drawQuoteLines(quote, 114, 32);
+
+    char authorText[50];
+    snprintf(authorText, sizeof(authorText), "- %s", quote.author);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText(authorText, 212);
+
+    display.fillRect(0, 244, DISPLAY_WIDTH, 56, GxEPD_BLACK);
+    display.setTextColor(GxEPD_WHITE);
+    char counter[22];
+    snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
+             static_cast<unsigned int>(index + 1), static_cast<unsigned int>(NUM_QUOTES));
+    drawCenteredText(counter, 266);
+    if (getSettings().showNavigationHints)
+    {
+        drawCenteredText("UP/DOWN BROWSE  PRESS MENU", 292);
+    }
+    display.setTextColor(GxEPD_BLACK);
+}
 }
 
 void applyGlobalFont(GlobalFontRole role)
@@ -205,35 +298,17 @@ void showQuote(uint8_t index)
 
     do
     {
-        display.fillScreen(GxEPD_WHITE);
-        display.setTextColor(GxEPD_BLACK);
-
-        applyGlobalFont(GLOBAL_FONT_SMALL);
-        drawCenteredText("A QUIET THOUGHT", 36);
-        display.drawLine(82, 56, DISPLAY_WIDTH - 82, 56, GxEPD_BLACK);
-
-        setReadingFont();
-        display.drawLine(58, 84, 58, 186, GxEPD_BLACK);
-        display.fillCircle(58, 84, 3, GxEPD_BLACK);
-
-        drawCenteredText(quote.line1, QUOTE_Y1);
-        drawCenteredText(quote.line2, QUOTE_Y2);
-        drawCenteredText(quote.line3, QUOTE_Y3);
-
-        char authorText[50];
-        snprintf(authorText, sizeof(authorText), "- %s", quote.author);
-        applyGlobalFont(GLOBAL_FONT_SMALL);
-        drawCenteredText(authorText, 214);
-        display.drawLine(104, 234, DISPLAY_WIDTH - 104, 234, GxEPD_BLACK);
-
-        char counter[22];
-        snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
-                 static_cast<unsigned int>(index + 1), static_cast<unsigned int>(NUM_QUOTES));
-        drawCenteredText(counter, 258);
-        if (getSettings().showNavigationHints)
+        switch (getQuoteDisplaySettings().theme)
         {
-            drawCenteredText("UP / DOWN  TO BROWSE", 279);
-            drawCenteredText("PRESS  FOR MENU", 297);
+            case QUOTE_THEME_QUIET:
+                drawQuietQuote(quote, index);
+                break;
+            case QUOTE_THEME_MINIMAL:
+                drawMinimalQuote(quote, index);
+                break;
+            case QUOTE_THEME_FOCUS:
+                drawFocusQuote(quote, index);
+                break;
         }
     } while (display.nextPage());
 
@@ -243,6 +318,36 @@ void showQuote(uint8_t index)
     Serial.print(NUM_QUOTES);
     Serial.print(": ");
     Serial.println(quote.line1);
+}
+
+void showQuoteSettings(uint8_t selectedSetting)
+{
+    char timerRow[32];
+    char themeRow[32];
+    snprintf(timerRow, sizeof(timerRow), "AUTO CHANGE: %s", quoteChangeIntervalLabel());
+    snprintf(themeRow, sizeof(themeRow), "THEME: %s", quoteThemeLabel());
+    const char* rows[] = { timerRow, themeRow, "RESET QUOTE SETTINGS" };
+
+    display.setRotation(0);
+    display.setFullWindow();
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setTextColor(GxEPD_BLACK);
+        applyGlobalFont(GLOBAL_FONT_BODY);
+        drawCenteredText("QUOTE SETTINGS", 44);
+        applyGlobalFont(GLOBAL_FONT_SMALL);
+        drawCenteredText("PERSONALIZE APP 1", 70);
+        display.drawLine(84, 84, DISPLAY_WIDTH - 84, 84, GxEPD_BLACK);
+        drawMenuItem(rows[0], 122, selectedSetting == 0);
+        drawMenuItem(rows[1], 158, selectedSetting == 1);
+        drawMenuItem(rows[2], 194, selectedSetting == 2);
+        drawCenteredText("UP / DOWN  SELECT", 250);
+        drawCenteredText("PRESS  CHANGE", 274);
+        drawCenteredText("HOLD  BACK", 296);
+    } while (display.nextPage());
 }
 
 void showMainMenu(uint8_t selectedApp)

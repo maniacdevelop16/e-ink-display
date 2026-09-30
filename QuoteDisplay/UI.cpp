@@ -13,6 +13,8 @@ namespace
 uint8_t currentQuote = 0;
 uint8_t selectedApp = 0;
 uint8_t selectedSetting = 0;
+uint8_t selectedQuoteSetting = 0;
+unsigned long quoteLastChangedAt = 0;
 uint16_t pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
@@ -29,6 +31,7 @@ enum Screen
 {
     MENU,
     QUOTE_DISPLAY,
+    QUOTE_SETTINGS,
     POMODORO,
     BREATHING,
     SETTINGS
@@ -58,6 +61,34 @@ BreathingState breathingState = BREATHING_READY;
 
 void displayCurrentQuote()
 {
+    showQuote(currentQuote);
+    quoteLastChangedAt = millis();
+}
+
+void displayQuoteSettings()
+{
+    showQuoteSettings(selectedQuoteSetting);
+}
+
+void updateQuoteChangeTimer()
+{
+    const uint32_t intervalSeconds = getQuoteDisplaySettings().autoChangeIntervalSeconds;
+    if (intervalSeconds == 0)
+    {
+        quoteLastChangedAt = millis();
+        return;
+    }
+
+    const unsigned long intervalMs = intervalSeconds * 1000UL;
+    const unsigned long elapsedMs = millis() - quoteLastChangedAt;
+    if (elapsedMs < intervalMs)
+    {
+        return;
+    }
+
+    const uint32_t changes = elapsedMs / intervalMs;
+    currentQuote = (currentQuote + changes) % NUM_QUOTES;
+    quoteLastChangedAt += changes * intervalMs;
     showQuote(currentQuote);
 }
 
@@ -381,6 +412,8 @@ void updateUI()
 
     if (currentScreen == QUOTE_DISPLAY)
     {
+        updateQuoteChangeTimer();
+
         if (event == INPUT_NEXT)
         {
             currentQuote = (currentQuote + 1) % NUM_QUOTES;
@@ -397,7 +430,45 @@ void updateUI()
         }
         else if (event == INPUT_LONG_PRESS)
         {
-            returnToMenu();
+            currentScreen = QUOTE_SETTINGS;
+            displayQuoteSettings();
+        }
+        return;
+    }
+
+    if (currentScreen == QUOTE_SETTINGS)
+    {
+        if (event == INPUT_NEXT)
+        {
+            selectedQuoteSetting = (selectedQuoteSetting + 1) % NUM_QUOTE_SETTINGS_ITEMS;
+            displayQuoteSettings();
+        }
+        else if (event == INPUT_PREVIOUS)
+        {
+            selectedQuoteSetting = (selectedQuoteSetting + NUM_QUOTE_SETTINGS_ITEMS - 1) % NUM_QUOTE_SETTINGS_ITEMS;
+            displayQuoteSettings();
+        }
+        else if (event == INPUT_PRESS)
+        {
+            if (selectedQuoteSetting == 0)
+            {
+                cycleQuoteChangeInterval();
+            }
+            else if (selectedQuoteSetting == 1)
+            {
+                cycleQuoteTheme();
+            }
+            else
+            {
+                resetQuoteDisplaySettings();
+            }
+            quoteLastChangedAt = millis();
+            displayQuoteSettings();
+        }
+        else if (event == INPUT_LONG_PRESS)
+        {
+            currentScreen = QUOTE_DISPLAY;
+            displayCurrentQuote();
         }
         return;
     }
