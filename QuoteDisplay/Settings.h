@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Quotes.h"
 
 enum FontChoice
 {
@@ -43,6 +44,7 @@ struct QuoteDisplaySettings
 {
     uint32_t autoChangeIntervalSeconds;
     QuoteTheme theme;
+    QuoteCategory category;
 };
 
 void initializeSettings();
@@ -64,6 +66,7 @@ uint8_t partialRefreshLimit(uint8_t defaultLimit);
 const QuoteDisplaySettings& getQuoteDisplaySettings();
 void cycleQuoteChangeInterval();
 void cycleQuoteTheme();
+void cycleQuoteCategory();
 void resetQuoteDisplaySettings();
 const char* quoteChangeIntervalLabel();
 const char* quoteThemeLabel();

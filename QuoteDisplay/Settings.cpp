@@ -7,7 +7,7 @@
 namespace
 {
 GlobalSettings settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true };
-QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET };
+QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };
 Preferences preferences;
 bool preferencesReady = false;
 
@@ -33,6 +33,7 @@ void saveQuoteSettings()
 
     preferences.putULong("quoteTime", quoteSettings.autoChangeIntervalSeconds);
     preferences.putUChar("quoteTheme", quoteSettings.theme);
+    preferences.putUChar("quoteCat", quoteSettings.category);
 }
 }
 
@@ -48,12 +49,15 @@ void initializeSettings()
     const uint8_t savedFontSize = preferences.getUChar("fontSize", FONT_SIZE_MEDIUM);
     const uint8_t savedRefresh = preferences.getUChar("refresh", REFRESH_GENTLE);
     const uint8_t savedTheme = preferences.getUChar("quoteTheme", QUOTE_THEME_QUIET);
+    const uint8_t savedCategory = preferences.getUChar("quoteCat", QUOTE_CATEGORY_DEFAULT);
     settings.fontChoice = static_cast<FontChoice>(savedFont < 5 ? savedFont : FONT_MONO_COMFORT);
     settings.fontSize = static_cast<FontSize>(savedFontSize < 3 ? savedFontSize : FONT_SIZE_MEDIUM);
     settings.refreshStyle = static_cast<RefreshStyle>(savedRefresh < 2 ? savedRefresh : REFRESH_GENTLE);
     settings.partialRefreshEnabled = preferences.getBool("partial", true);
     quoteSettings.autoChangeIntervalSeconds = preferences.getULong("quoteTime", 0);
     quoteSettings.theme = static_cast<QuoteTheme>(savedTheme < 3 ? savedTheme : QUOTE_THEME_QUIET);
+    quoteSettings.category = static_cast<QuoteCategory>(
+        savedCategory < QUOTE_CATEGORY_COUNT ? savedCategory : QUOTE_CATEGORY_DEFAULT);
 }
 
 const GlobalSettings& getSettings()
@@ -156,9 +160,16 @@ void cycleQuoteTheme()
     saveQuoteSettings();
 }
 
+void cycleQuoteCategory()
+{
+    quoteSettings.category = static_cast<QuoteCategory>(
+        (quoteSettings.category + 1) % QUOTE_CATEGORY_COUNT);
+    saveQuoteSettings();
+}
+
 void resetQuoteDisplaySettings()
 {
-    quoteSettings = { 0, QUOTE_THEME_QUIET };
+    quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };
     saveQuoteSettings();
 }
 

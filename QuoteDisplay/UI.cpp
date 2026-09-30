@@ -96,7 +96,8 @@ void updateQuoteChangeTimer()
     }
 
     const uint32_t changes = elapsedMs / intervalMs;
-    currentQuote = (currentQuote + changes) % NUM_QUOTES;
+    const uint8_t count = quoteCount(getQuoteDisplaySettings().category);
+    currentQuote = (currentQuote + changes) % count;
     quoteLastChangedAt += changes * intervalMs;
     showQuote(currentQuote);
     saveCurrentView();
@@ -422,7 +423,8 @@ void goBack()
 void initializeUI()
 {
     initializeSettings();
-    currentQuote = savedQuote() < NUM_QUOTES ? savedQuote() : 0;
+    const uint8_t activeQuoteCount = quoteCount(getQuoteDisplaySettings().category);
+    currentQuote = savedQuote() < activeQuoteCount ? savedQuote() : 0;
     selectedApp = savedLauncherSelection() < NUM_LAUNCHER_APPS ? savedLauncherSelection() : 0;
     const uint8_t previousScreen = savedScreen();
     currentScreen = previousScreen <= SETTINGS ? static_cast<Screen>(previousScreen) : MENU;
@@ -499,12 +501,14 @@ void updateUI()
 
         if (event == INPUT_NEXT)
         {
-            currentQuote = (currentQuote + 1) % NUM_QUOTES;
+            const uint8_t count = quoteCount(getQuoteDisplaySettings().category);
+            currentQuote = (currentQuote + 1) % count;
             displayCurrentQuote();
         }
         else if (event == INPUT_PREVIOUS)
         {
-            currentQuote = (currentQuote + NUM_QUOTES - 1) % NUM_QUOTES;
+            const uint8_t count = quoteCount(getQuoteDisplaySettings().category);
+            currentQuote = (currentQuote + count - 1) % count;
             displayCurrentQuote();
         }
         else if (event == INPUT_PRESS)
@@ -532,15 +536,23 @@ void updateUI()
         {
             if (selectedQuoteSetting == 0)
             {
-                cycleQuoteChangeInterval();
+                cycleQuoteCategory();
+                currentQuote = 0;
+                saveCurrentView();
             }
             else if (selectedQuoteSetting == 1)
+            {
+                cycleQuoteChangeInterval();
+            }
+            else if (selectedQuoteSetting == 2)
             {
                 cycleQuoteTheme();
             }
             else
             {
                 resetQuoteDisplaySettings();
+                currentQuote = 0;
+                saveCurrentView();
             }
             quoteLastChangedAt = millis();
             refreshQuoteSettings();

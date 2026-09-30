@@ -166,12 +166,12 @@ void drawQuoteLines(const Quote& quote, int firstLineY, int lineSpacing)
     drawCenteredText(quote.line3, firstLineY + (lineSpacing * 2));
 }
 
-void drawQuietQuote(const Quote& quote, uint8_t index)
+void drawQuietQuote(const Quote& quote, uint8_t index, uint8_t count, const char* category)
 {
     display.fillScreen(GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawCenteredText("A QUIET THOUGHT", 36);
+    drawCenteredText(category, 36);
     display.drawLine(82, 56, DISPLAY_WIDTH - 82, 56, GxEPD_BLACK);
     display.drawLine(58, 84, 58, 186, GxEPD_BLACK);
     display.fillCircle(58, 84, 3, GxEPD_BLACK);
@@ -185,16 +185,16 @@ void drawQuietQuote(const Quote& quote, uint8_t index)
 
     char counter[22];
     snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
-             static_cast<unsigned int>(index + 1), static_cast<unsigned int>(NUM_QUOTES));
+             static_cast<unsigned int>(index + 1), static_cast<unsigned int>(count));
     drawCenteredText(counter, 276);
 }
 
-void drawMinimalQuote(const Quote& quote, uint8_t index)
+void drawMinimalQuote(const Quote& quote, uint8_t index, uint8_t count, const char* category)
 {
     display.fillScreen(GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawCenteredText("QUOTE", 34);
+    drawCenteredText(category, 34);
     display.drawLine(120, 50, DISPLAY_WIDTH - 120, 50, GxEPD_BLACK);
     drawQuoteLines(quote, 116, 34);
 
@@ -205,17 +205,17 @@ void drawMinimalQuote(const Quote& quote, uint8_t index)
 
     char counter[22];
     snprintf(counter, sizeof(counter), "%u / %u", static_cast<unsigned int>(index + 1),
-             static_cast<unsigned int>(NUM_QUOTES));
+             static_cast<unsigned int>(count));
     drawCenteredText(counter, 276);
 }
 
-void drawFocusQuote(const Quote& quote, uint8_t index)
+void drawFocusQuote(const Quote& quote, uint8_t index, uint8_t count, const char* category)
 {
     display.fillScreen(GxEPD_WHITE);
     display.fillRect(0, 0, DISPLAY_WIDTH, 44, GxEPD_BLACK);
     display.setTextColor(GxEPD_WHITE);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawCenteredText("FOCUS", 30);
+    drawCenteredText(category, 30);
 
     display.setTextColor(GxEPD_BLACK);
     display.drawLine(70, 72, DISPLAY_WIDTH - 70, 72, GxEPD_BLACK);
@@ -229,23 +229,27 @@ void drawFocusQuote(const Quote& quote, uint8_t index)
 
     char counter[22];
     snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
-             static_cast<unsigned int>(index + 1), static_cast<unsigned int>(NUM_QUOTES));
+             static_cast<unsigned int>(index + 1), static_cast<unsigned int>(count));
     drawCenteredText(counter, 276);
 }
 
 void drawQuoteSettingsContent(uint8_t selectedSetting)
 {
+    char categoryRow[34];
     char timerRow[32];
     char themeRow[32];
+    snprintf(categoryRow, sizeof(categoryRow), "CATEGORY: %s",
+             quoteCategoryLabel(getQuoteDisplaySettings().category));
     snprintf(timerRow, sizeof(timerRow), "AUTO CHANGE: %s", quoteChangeIntervalLabel());
     snprintf(themeRow, sizeof(themeRow), "THEME: %s", quoteThemeLabel());
-    const char* rows[] = { timerRow, themeRow, "RESET QUOTE SETTINGS" };
+    const char* rows[] = { categoryRow, timerRow, themeRow, "RESET QUOTE SETTINGS" };
 
     display.setTextColor(GxEPD_BLACK);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawMenuItem(rows[0], 122, selectedSetting == 0);
-    drawMenuItem(rows[1], 158, selectedSetting == 1);
-    drawMenuItem(rows[2], 194, selectedSetting == 2);
+    drawMenuItem(rows[0], 108, selectedSetting == 0);
+    drawMenuItem(rows[1], 138, selectedSetting == 1);
+    drawMenuItem(rows[2], 168, selectedSetting == 2);
+    drawMenuItem(rows[3], 198, selectedSetting == 3);
 }
 
 void drawSettingsContent(uint8_t selectedSetting)
@@ -345,7 +349,10 @@ void initializeDisplay()
 
 void showQuote(uint8_t index)
 {
-    const Quote& quote = getQuote(index);
+    const QuoteCategory category = getQuoteDisplaySettings().category;
+    const uint8_t count = quoteCount(category);
+    const Quote& quote = getQuote(category, index);
+    const char* categoryLabel = quoteCategoryLabel(category);
 
     display.setRotation(0);
     display.setFullWindow();
@@ -356,13 +363,13 @@ void showQuote(uint8_t index)
         switch (getQuoteDisplaySettings().theme)
         {
             case QUOTE_THEME_QUIET:
-                drawQuietQuote(quote, index);
+                drawQuietQuote(quote, index, count, categoryLabel);
                 break;
             case QUOTE_THEME_MINIMAL:
-                drawMinimalQuote(quote, index);
+                drawMinimalQuote(quote, index, count, categoryLabel);
                 break;
             case QUOTE_THEME_FOCUS:
-                drawFocusQuote(quote, index);
+                drawFocusQuote(quote, index, count, categoryLabel);
                 break;
         }
     } while (display.nextPage());
@@ -370,7 +377,7 @@ void showQuote(uint8_t index)
     Serial.print("Quote ");
     Serial.print(index + 1);
     Serial.print("/");
-    Serial.print(NUM_QUOTES);
+    Serial.print(count);
     Serial.print(": ");
     Serial.println(quote.line1);
 }
