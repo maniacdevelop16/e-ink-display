@@ -588,9 +588,13 @@ void updateUI()
             }
             else if (selectedSetting == 1)
             {
-                togglePartialRefresh();
+                cycleFontSize();
             }
             else if (selectedSetting == 2)
+            {
+                togglePartialRefresh();
+            }
+            else if (selectedSetting == 3)
             {
                 cycleRefreshStyle();
             }
@@ -598,7 +602,7 @@ void updateUI()
             {
                 resetSettings();
             }
-            if (selectedSetting == 0 || selectedSetting == 3)
+            if (selectedSetting == 0 || selectedSetting == 1 || selectedSetting == 4)
             {
                 displaySettings();
             }

@@ -17,9 +17,17 @@ enum RefreshStyle
     REFRESH_RESPONSIVE
 };
 
+enum FontSize
+{
+    FONT_SIZE_SMALL,
+    FONT_SIZE_MEDIUM,
+    FONT_SIZE_LARGE
+};
+
 struct GlobalSettings
 {
     FontChoice fontChoice;
+    FontSize fontSize;
     RefreshStyle refreshStyle;
     bool partialRefreshEnabled;
 };
@@ -40,11 +48,13 @@ struct QuoteDisplaySettings
 void initializeSettings();
 const GlobalSettings& getSettings();
 void cycleFontChoice();
+void cycleFontSize();
 void cycleRefreshStyle();
 void togglePartialRefresh();
 void resetSettings();
 
 const char* fontChoiceLabel();
+const char* fontSizeLabel();
 const char* refreshStyleLabel();
 // Future pages should use these helpers instead of local display preferences.
 bool usePartialRefresh();

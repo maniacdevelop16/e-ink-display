@@ -251,20 +251,23 @@ void drawQuoteSettingsContent(uint8_t selectedSetting)
 void drawSettingsContent(uint8_t selectedSetting)
 {
     char fontRow[32];
+    char sizeRow[32];
     char partialRow[32];
     char refreshRow[32];
     snprintf(fontRow, sizeof(fontRow), "FONT: %s", fontChoiceLabel());
+    snprintf(sizeRow, sizeof(sizeRow), "FONT SIZE: %s", fontSizeLabel());
     snprintf(partialRow, sizeof(partialRow), "PARTIAL REFRESH: %s",
              getSettings().partialRefreshEnabled ? "ON" : "OFF");
     snprintf(refreshRow, sizeof(refreshRow), "REFRESH: %s", refreshStyleLabel());
-    const char* rows[] = { fontRow, partialRow, refreshRow, "RESET DEFAULTS" };
+    const char* rows[] = { fontRow, sizeRow, partialRow, refreshRow, "RESET DEFAULTS" };
 
     display.setTextColor(GxEPD_BLACK);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawMenuItem(rows[0], 112, selectedSetting == 0);
-    drawMenuItem(rows[1], 142, selectedSetting == 1);
-    drawMenuItem(rows[2], 172, selectedSetting == 2);
-    drawMenuItem(rows[3], 202, selectedSetting == 3);
+    drawMenuItem(rows[0], 108, selectedSetting == 0);
+    drawMenuItem(rows[1], 133, selectedSetting == 1);
+    drawMenuItem(rows[2], 158, selectedSetting == 2);
+    drawMenuItem(rows[3], 183, selectedSetting == 3);
+    drawMenuItem(rows[4], 208, selectedSetting == 4);
 }
 }
 
@@ -272,6 +275,42 @@ void applyGlobalFont(GlobalFontRole role)
 {
     const bool primary = role == GLOBAL_FONT_PRIMARY;
     const bool small = role == GLOBAL_FONT_SMALL;
+
+    if (getSettings().fontSize == FONT_SIZE_SMALL)
+    {
+        switch (getSettings().fontChoice)
+        {
+            case FONT_MONO_COMPACT:
+            case FONT_MONO_COMFORT:
+                display.setFont(primary ? &FreeMonoBold12pt7b : &FreeMonoBold9pt7b);
+                return;
+            case FONT_SANS_COMPACT:
+            case FONT_SANS_COMFORT:
+                display.setFont(primary ? &FreeSans12pt7b : &FreeSans9pt7b);
+                return;
+            case FONT_SERIF_READER:
+                display.setFont(primary ? &FreeSerif12pt7b : &FreeSerif9pt7b);
+                return;
+        }
+    }
+
+    if (getSettings().fontSize == FONT_SIZE_LARGE)
+    {
+        switch (getSettings().fontChoice)
+        {
+            case FONT_MONO_COMPACT:
+            case FONT_MONO_COMFORT:
+                display.setFont(primary || !small ? &FreeMonoBold18pt7b : &FreeMonoBold12pt7b);
+                return;
+            case FONT_SANS_COMPACT:
+            case FONT_SANS_COMFORT:
+                display.setFont(primary || !small ? &FreeSans18pt7b : &FreeSans12pt7b);
+                return;
+            case FONT_SERIF_READER:
+                display.setFont(primary || !small ? &FreeSerif18pt7b : &FreeSerif12pt7b);
+                return;
+        }
+    }
 
     switch (getSettings().fontChoice)
     {

@@ -4,7 +4,7 @@
 
 namespace
 {
-GlobalSettings settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true };
+GlobalSettings settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true };
 QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET };
 }
 
@@ -24,6 +24,11 @@ void cycleFontChoice()
     settings.fontChoice = static_cast<FontChoice>((settings.fontChoice + 1) % 5);
 }
 
+void cycleFontSize()
+{
+    settings.fontSize = static_cast<FontSize>((settings.fontSize + 1) % 3);
+}
+
 void cycleRefreshStyle()
 {
     settings.refreshStyle = settings.refreshStyle == REFRESH_GENTLE ? REFRESH_RESPONSIVE : REFRESH_GENTLE;
@@ -36,7 +41,7 @@ void togglePartialRefresh()
 
 void resetSettings()
 {
-    settings = { FONT_MONO_COMFORT, REFRESH_GENTLE, true };
+    settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true };
 }
 
 const char* fontChoiceLabel()
@@ -49,6 +54,12 @@ const char* fontChoiceLabel()
         "SERIF READER"
     };
     return labels[settings.fontChoice];
+}
+
+const char* fontSizeLabel()
+{
+    const char* labels[] = { "SMALL", "MEDIUM", "LARGE" };
+    return labels[settings.fontSize];
 }
 
 const char* refreshStyleLabel()
