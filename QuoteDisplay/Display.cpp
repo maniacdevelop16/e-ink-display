@@ -85,38 +85,40 @@ void drawMenuContent(uint8_t selectedApp)
 
 void drawPomodoroProgressRing(uint16_t remainingSeconds, uint16_t totalSeconds)
 {
-    constexpr uint8_t SEGMENT_COUNT = 24;
     constexpr int CENTER_X = DISPLAY_WIDTH / 2;
     constexpr int CENTER_Y = 157;
+    constexpr int OUTER_RADIUS = 96;
+    constexpr int INNER_RADIUS = 79;
+    constexpr int ARC_RADIUS = 88;
+    constexpr int ARC_HALF_WIDTH = 8;
     constexpr float START_ANGLE = -1.5707963f;
-    constexpr float FULL_CIRCLE = 6.2831853f;
+    constexpr float DEGREES_TO_RADIANS = 0.0174532925f;
     const uint16_t elapsedSeconds = totalSeconds > remainingSeconds ? totalSeconds - remainingSeconds : 0;
-    uint8_t completedSegments = totalSeconds == 0
+    uint16_t progressDegrees = totalSeconds == 0
         ? 0
-        : (static_cast<uint32_t>(elapsedSeconds) * SEGMENT_COUNT) / totalSeconds;
+        : (static_cast<uint32_t>(elapsedSeconds) * 360UL) / totalSeconds;
     if (remainingSeconds == 0 && totalSeconds > 0)
     {
-        completedSegments = SEGMENT_COUNT;
+        progressDegrees = 360;
     }
 
-    for (uint8_t segment = 0; segment < SEGMENT_COUNT; ++segment)
+    display.drawCircle(CENTER_X, CENTER_Y, OUTER_RADIUS, GxEPD_BLACK);
+    display.drawCircle(CENTER_X, CENTER_Y, INNER_RADIUS, GxEPD_BLACK);
+
+    if (progressDegrees > 0)
     {
-        const float angle = START_ANGLE + (FULL_CIRCLE * segment / SEGMENT_COUNT);
-        const bool completed = segment < completedSegments;
-        const int innerRadius = completed ? 79 : 87;
-        const int outerRadius = 96;
-        const int x1 = CENTER_X + static_cast<int>(cosf(angle) * innerRadius);
-        const int y1 = CENTER_Y + static_cast<int>(sinf(angle) * innerRadius);
-        const int x2 = CENTER_X + static_cast<int>(cosf(angle) * outerRadius);
-        const int y2 = CENTER_Y + static_cast<int>(sinf(angle) * outerRadius);
-        display.drawLine(x1, y1, x2, y2, GxEPD_BLACK);
-        if (completed)
+        for (uint16_t degree = 0; degree <= progressDegrees; degree += 2)
         {
-            const int offsetX = static_cast<int>(roundf(-sinf(angle)));
-            const int offsetY = static_cast<int>(roundf(cosf(angle)));
-            display.drawLine(x1 + offsetX, y1 + offsetY,
-                             x2 + offsetX, y2 + offsetY, GxEPD_BLACK);
+            const float angle = START_ANGLE + degree * DEGREES_TO_RADIANS;
+            const int x = CENTER_X + static_cast<int>(cosf(angle) * ARC_RADIUS);
+            const int y = CENTER_Y + static_cast<int>(sinf(angle) * ARC_RADIUS);
+            display.fillCircle(x, y, ARC_HALF_WIDTH, GxEPD_BLACK);
         }
+
+        // Re-cut the center and borders so the filled arc stays smooth and circular.
+        display.fillCircle(CENTER_X, CENTER_Y, INNER_RADIUS - 1, GxEPD_WHITE);
+        display.drawCircle(CENTER_X, CENTER_Y, INNER_RADIUS, GxEPD_BLACK);
+        display.drawCircle(CENTER_X, CENTER_Y, OUTER_RADIUS, GxEPD_BLACK);
     }
 }
 
