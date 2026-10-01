@@ -20,7 +20,6 @@ uint16_t pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
 unsigned long pomodoroLastTick = 0;
 uint8_t pomodoroPartialRefreshCount = 0;
-uint8_t pomodoroAnimationFrame = 0;
 uint8_t menuPartialRefreshCount = 0;
 uint8_t quoteSettingsPartialRefreshCount = 0;
 uint8_t settingsPartialRefreshCount = 0;
@@ -162,11 +161,11 @@ void refreshMenuSelection()
 
 void displayPomodoro()
 {
-    const char* status = "READY TO FOCUS";
+    const char* status = "READY";
 
     if (pomodoroState == POMODORO_RUNNING)
     {
-        status = "FOCUS IN PROGRESS";
+        status = "FOCUS";
     }
     else if (pomodoroState == POMODORO_PAUSED)
     {
@@ -174,11 +173,10 @@ void displayPomodoro()
     }
     else if (pomodoroState == POMODORO_COMPLETE)
     {
-        status = "SESSION COMPLETE";
+        status = "COMPLETE";
     }
 
-    showPomodoro(pomodoroRemainingSeconds, pomodoroTotalSeconds, status,
-                 pomodoroAnimationFrame, pomodoroState == POMODORO_RUNNING);
+    showPomodoro(pomodoroRemainingSeconds, pomodoroTotalSeconds, status);
     pomodoroLastRenderedSeconds = pomodoroRemainingSeconds;
     pomodoroPartialRefreshCount = 0;
 }
@@ -188,14 +186,11 @@ void resetPomodoro()
     pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
     pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
     pomodoroState = POMODORO_READY;
-    pomodoroAnimationFrame = 0;
     displayPomodoro();
 }
 
 void refreshPomodoroTimer()
 {
-    pomodoroAnimationFrame = (pomodoroAnimationFrame + 1) % 5;
-
     if (!usePartialRefresh())
     {
         displayPomodoro();
@@ -208,7 +203,7 @@ void refreshPomodoroTimer()
         return;
     }
 
-    updatePomodoroTimer(pomodoroRemainingSeconds, pomodoroTotalSeconds, pomodoroAnimationFrame);
+    updatePomodoroTimer(pomodoroRemainingSeconds, pomodoroTotalSeconds);
     pomodoroLastRenderedSeconds = pomodoroRemainingSeconds;
     ++pomodoroPartialRefreshCount;
 }

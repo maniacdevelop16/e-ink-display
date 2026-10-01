@@ -52,10 +52,6 @@ constexpr uint16_t POMODORO_RESPONSIVE_REFRESH_INTERVAL_SECONDS = 5;
 constexpr uint8_t POMODORO_PARTIALS_BEFORE_FULL_REFRESH = 12;
 constexpr int POMODORO_DYNAMIC_Y = 55;
 constexpr int POMODORO_DYNAMIC_HEIGHT = 220;
-constexpr int POMODORO_PROGRESS_X = 55;
-constexpr int POMODORO_PROGRESS_Y = 178;
-constexpr int POMODORO_PROGRESS_WIDTH = 290;
-constexpr int POMODORO_PROGRESS_HEIGHT = 12;
 
 // Box-breathing behavior. One round is inhale, hold, exhale, hold.
 constexpr uint8_t BREATHING_PHASE_COUNT = 4;
