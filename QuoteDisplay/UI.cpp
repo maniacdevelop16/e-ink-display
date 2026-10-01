@@ -26,6 +26,7 @@ uint8_t settingsPartialRefreshCount = 0;
 uint8_t breathingPhase = 0;
 uint8_t breathingCurrentRound = 1;
 uint8_t breathingTotalRounds = BREATHING_DEFAULT_ROUNDS;
+uint8_t breathingVisualStep = 0;
 unsigned long breathingPhaseStartedAt = 0;
 uint8_t breathingPartialRefreshCount = 0;
 
@@ -258,36 +259,28 @@ void addPomodoroTime()
     displayPomodoro();
 }
 
-void getBreathingDisplayText(const char*& phaseLabel, const char*& status)
+const char* getBreathingPhaseLabel()
 {
-    const char* phaseLabels[] = { "INHALE", "HOLD", "EXHALE", "HOLD" };
-    const char* phaseMessages[] = {
-        "BREATHE IN SLOWLY",
-        "STAY STILL AND CALM",
-        "BREATHE OUT SLOWLY",
-        "REST IN THE STILLNESS"
-    };
-    phaseLabel = phaseLabels[breathingPhase];
-    status = phaseMessages[breathingPhase];
+    const char* phaseLabels[] = { "INHALE", "HOLD", "EXHALE", "REST" };
     if (breathingState == BREATHING_PAUSED)
     {
-        status = "PAUSED - TAKE YOUR TIME";
+        return "PAUSED";
     }
-    else if (breathingState == BREATHING_COMPLETE)
+    if (breathingState == BREATHING_COMPLETE)
     {
-        phaseLabel = "COMPLETE";
-        status = "ALL ROUNDS FINISHED";
+        return "COMPLETE";
     }
+    if (breathingState == BREATHING_READY)
+    {
+        return "READY";
+    }
+    return phaseLabels[breathingPhase];
 }
 
 void displayBreathing()
 {
-    const char* phaseLabel;
-    const char* status;
-    getBreathingDisplayText(phaseLabel, status);
-
-    showBreathing(breathingPhase, breathingCurrentRound, breathingTotalRounds,
-                  phaseLabel, status);
+    showBreathing(breathingPhase, breathingVisualStep, breathingCurrentRound,
+                  breathingTotalRounds, getBreathingPhaseLabel());
     breathingPartialRefreshCount = 0;
 }
 
@@ -305,11 +298,8 @@ void refreshBreathingPhase()
         return;
     }
 
-    const char* phaseLabel;
-    const char* status;
-    getBreathingDisplayText(phaseLabel, status);
-    updateBreathingPhase(breathingPhase, breathingCurrentRound, breathingTotalRounds,
-                         phaseLabel, status);
+    updateBreathingPhase(breathingPhase, breathingVisualStep, breathingCurrentRound,
+                         breathingTotalRounds, getBreathingPhaseLabel());
     ++breathingPartialRefreshCount;
 }
 
@@ -317,6 +307,7 @@ void resetBreathing()
 {
     breathingPhase = 0;
     breathingCurrentRound = 1;
+    breathingVisualStep = 0;
     breathingState = BREATHING_READY;
     displayBreathing();
 }
@@ -336,9 +327,16 @@ void updateBreathing()
         return;
     }
 
-    unsigned long elapsedPhases = (millis() - breathingPhaseStartedAt) / BREATHING_PHASE_DURATION_MS;
+    const unsigned long elapsedMs = millis() - breathingPhaseStartedAt;
+    unsigned long elapsedPhases = elapsedMs / BREATHING_PHASE_DURATION_MS;
     if (elapsedPhases == 0)
     {
+        const uint8_t visualStep = elapsedMs / BREATHING_ANIMATION_STEP_MS;
+        if (visualStep != breathingVisualStep)
+        {
+            breathingVisualStep = visualStep;
+            refreshBreathingPhase();
+        }
         return;
     }
 
@@ -363,6 +361,8 @@ void updateBreathing()
             ++breathingPhase;
         }
     }
+
+    breathingVisualStep = 0;
 
     if (breathingState == BREATHING_COMPLETE)
     {
@@ -613,6 +613,7 @@ void updateUI()
                 breathingState = breathingState == BREATHING_RUNNING
                     ? BREATHING_PAUSED
                     : BREATHING_RUNNING;
+                breathingVisualStep = 0;
                 breathingPhaseStartedAt = millis();
                 displayBreathing();
             }

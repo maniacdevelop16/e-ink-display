@@ -53,13 +53,14 @@ constexpr uint8_t POMODORO_PARTIALS_BEFORE_FULL_REFRESH = 12;
 constexpr int POMODORO_DYNAMIC_Y = 55;
 constexpr int POMODORO_DYNAMIC_HEIGHT = 220;
 
-// Box-breathing behavior. One round is inhale, hold, exhale, hold.
+// Breathing-bloom behavior. One round is inhale, hold, exhale, rest.
 constexpr uint8_t BREATHING_PHASE_COUNT = 4;
 constexpr uint8_t BREATHING_DEFAULT_ROUNDS = 4;
 constexpr uint8_t BREATHING_MAX_ROUNDS = 8;
 constexpr unsigned long BREATHING_PHASE_DURATION_MS = 4000;
-constexpr uint8_t BREATHING_PARTIALS_BEFORE_FULL_REFRESH = 8;
+constexpr unsigned long BREATHING_ANIMATION_STEP_MS = 1000;
+constexpr uint8_t BREATHING_PARTIALS_BEFORE_FULL_REFRESH = 24;
 constexpr int BREATHING_DYNAMIC_Y = 55;
-constexpr int BREATHING_DYNAMIC_HEIGHT = 185;
+constexpr int BREATHING_DYNAMIC_HEIGHT = 245;
 
 constexpr unsigned long DEBOUNCE_TIME_MS = 80;

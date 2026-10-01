@@ -66,11 +66,11 @@ void drawMenuItem(const char* label, int y, bool selected)
 
 void drawMenuContent(uint8_t selectedApp)
 {
-    const char* apps[] = { "QUOTE DISPLAY", "POMODORO", "BOX BREATHING", "GLOBAL SETTINGS" };
+    const char* apps[] = { "QUOTE DISPLAY", "POMODORO", "BREATHING BLOOM", "GLOBAL SETTINGS" };
     const char* descriptions[] = {
         "Browse daily quotes",
         "Focus timer: 25 minutes",
-        "Guided 4-4-4-4 breathing",
+        "A calm guided breathing rhythm",
         "Fonts and refresh options"
     };
 
@@ -137,50 +137,65 @@ void drawPomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds, const c
     drawCenteredText(status, 188);
 }
 
-void drawBreathingSquare(uint8_t phase)
+void drawBreathingBloom(uint8_t phase, uint8_t phaseStep)
 {
-    const int sizes[] = { 36, 54, 78, 54 };
-    const int size = sizes[phase];
-    const int x = (DISPLAY_WIDTH - size) / 2;
-    const int y = 158 - (size / 2);
+    constexpr int CENTER_X = DISPLAY_WIDTH / 2;
+    constexpr int CENTER_Y = 170;
+    constexpr uint8_t PETAL_COUNT = 6;
+    constexpr float FULL_CIRCLE_RADIANS = 6.28318530718f;
+    const uint8_t step = phaseStep > 3 ? 3 : phaseStep;
 
-    display.drawRect(x, y, size, size, GxEPD_BLACK);
+    int petalDistance = 20;
+    int petalRadius = 10;
     if (phase == 0)
     {
-        display.fillRect((DISPLAY_WIDTH - 14) / 2, 151, 14, 14, GxEPD_BLACK);
+        petalDistance = 20 + step * 8;
+        petalRadius = 10 + step;
+    }
+    else if (phase == 1)
+    {
+        petalDistance = 44;
+        petalRadius = 13;
+    }
+    else if (phase == 2)
+    {
+        petalDistance = 44 - step * 8;
+        petalRadius = 13 - step;
+    }
+
+    for (uint8_t petal = 0; petal < PETAL_COUNT; ++petal)
+    {
+        const float angle = -FULL_CIRCLE_RADIANS / 4.0f +
+            FULL_CIRCLE_RADIANS * petal / PETAL_COUNT;
+        const int x = CENTER_X + static_cast<int>(cosf(angle) * petalDistance);
+        const int y = CENTER_Y + static_cast<int>(sinf(angle) * petalDistance);
+        display.drawCircle(x, y, petalRadius, GxEPD_BLACK);
+        display.fillCircle(x, y, 2, GxEPD_BLACK);
+    }
+
+    display.fillCircle(CENTER_X, CENTER_Y, 6, GxEPD_BLACK);
+    if (phase == 1)
+    {
+        display.drawCircle(CENTER_X, CENTER_Y, 61 + (step % 2) * 2, GxEPD_BLACK);
+    }
+    else if (phase == 3)
+    {
+        display.drawCircle(CENTER_X, CENTER_Y, 28 + (step % 2) * 2, GxEPD_BLACK);
     }
 }
 
-void drawBreathingContent(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
-                          const char* phaseLabel, const char* status)
+void drawBreathingContent(uint8_t phase, uint8_t phaseStep, uint8_t currentRound,
+                          uint8_t totalRounds, const char* phaseLabel)
 {
-    char roundText[20];
-    snprintf(roundText, sizeof(roundText), "ROUND %u OF %u",
+    char roundText[12];
+    snprintf(roundText, sizeof(roundText), "%u / %u",
              static_cast<unsigned int>(currentRound), static_cast<unsigned int>(totalRounds));
 
     setPrimaryFont();
-    drawCenteredText(phaseLabel, 86);
-    setReadingFont();
-    drawCenteredText(status, 108);
-    drawBreathingSquare(phase);
-    drawCenteredText(roundText, 214);
-
-    constexpr int STEP_SIZE = 12;
-    constexpr int STEP_GAP = 18;
-    constexpr int FIRST_STEP_X = (DISPLAY_WIDTH - (BREATHING_PHASE_COUNT * STEP_SIZE +
-        (BREATHING_PHASE_COUNT - 1) * STEP_GAP)) / 2;
-    for (uint8_t step = 0; step < BREATHING_PHASE_COUNT; ++step)
-    {
-        const int x = FIRST_STEP_X + step * (STEP_SIZE + STEP_GAP);
-        if (step == phase)
-        {
-            display.fillRect(x, 222, STEP_SIZE, STEP_SIZE, GxEPD_BLACK);
-        }
-        else
-        {
-            display.drawRect(x, 222, STEP_SIZE, STEP_SIZE, GxEPD_BLACK);
-        }
-    }
+    drawCenteredText(phaseLabel, 91);
+    drawBreathingBloom(phase, phaseStep);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText(roundText, 278);
 }
 
 void drawQuoteLines(const Quote& quote, int firstLineY, int lineSpacing)
@@ -543,8 +558,8 @@ void updatePomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds)
     display.setFullWindow();
 }
 
-void showBreathing(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
-                   const char* phaseLabel, const char* status)
+void showBreathing(uint8_t phase, uint8_t phaseStep, uint8_t currentRound,
+                   uint8_t totalRounds, const char* phaseLabel)
 {
     display.setRotation(0);
     display.setFullWindow();
@@ -557,14 +572,14 @@ void showBreathing(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
         setReadingFont();
         display.fillRect(0, 0, DISPLAY_WIDTH, HEADER_HEIGHT, GxEPD_BLACK);
         display.setTextColor(GxEPD_WHITE);
-        drawCenteredText("BOX BREATHING", 34);
+        drawCenteredText("BREATHE", 34);
         display.setTextColor(GxEPD_BLACK);
-        drawBreathingContent(phase, currentRound, totalRounds, phaseLabel, status);
+        drawBreathingContent(phase, phaseStep, currentRound, totalRounds, phaseLabel);
     } while (display.nextPage());
 }
 
-void updateBreathingPhase(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
-                          const char* phaseLabel, const char* status)
+void updateBreathingPhase(uint8_t phase, uint8_t phaseStep, uint8_t currentRound,
+                          uint8_t totalRounds, const char* phaseLabel)
 {
     display.setRotation(0);
     display.setPartialWindow(0, BREATHING_DYNAMIC_Y, DISPLAY_WIDTH, BREATHING_DYNAMIC_HEIGHT);
@@ -575,7 +590,7 @@ void updateBreathingPhase(uint8_t phase, uint8_t currentRound, uint8_t totalRoun
         display.fillRect(0, BREATHING_DYNAMIC_Y, DISPLAY_WIDTH, BREATHING_DYNAMIC_HEIGHT, GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
         setReadingFont();
-        drawBreathingContent(phase, currentRound, totalRounds, phaseLabel, status);
+        drawBreathingContent(phase, phaseStep, currentRound, totalRounds, phaseLabel);
     } while (display.nextPage());
 
     display.setFullWindow();
