@@ -20,6 +20,7 @@ uint16_t pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
 unsigned long pomodoroLastTick = 0;
 uint8_t pomodoroPartialRefreshCount = 0;
+uint8_t pomodoroAnimationFrame = 0;
 uint8_t menuPartialRefreshCount = 0;
 uint8_t quoteSettingsPartialRefreshCount = 0;
 uint8_t settingsPartialRefreshCount = 0;
@@ -176,7 +177,8 @@ void displayPomodoro()
         status = "SESSION COMPLETE";
     }
 
-    showPomodoro(pomodoroRemainingSeconds, pomodoroTotalSeconds, status);
+    showPomodoro(pomodoroRemainingSeconds, pomodoroTotalSeconds, status,
+                 pomodoroAnimationFrame, pomodoroState == POMODORO_RUNNING);
     pomodoroLastRenderedSeconds = pomodoroRemainingSeconds;
     pomodoroPartialRefreshCount = 0;
 }
@@ -186,11 +188,14 @@ void resetPomodoro()
     pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
     pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
     pomodoroState = POMODORO_READY;
+    pomodoroAnimationFrame = 0;
     displayPomodoro();
 }
 
 void refreshPomodoroTimer()
 {
+    pomodoroAnimationFrame = (pomodoroAnimationFrame + 1) % 5;
+
     if (!usePartialRefresh())
     {
         displayPomodoro();
@@ -203,7 +208,7 @@ void refreshPomodoroTimer()
         return;
     }
 
-    updatePomodoroTimer(pomodoroRemainingSeconds, pomodoroTotalSeconds);
+    updatePomodoroTimer(pomodoroRemainingSeconds, pomodoroTotalSeconds, pomodoroAnimationFrame);
     pomodoroLastRenderedSeconds = pomodoroRemainingSeconds;
     ++pomodoroPartialRefreshCount;
 }

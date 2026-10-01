@@ -125,7 +125,9 @@ bool usePartialRefresh()
 
 uint16_t pomodoroRefreshIntervalSeconds()
 {
-    return settings.refreshStyle == REFRESH_GENTLE ? POMODORO_REFRESH_INTERVAL_SECONDS : 10;
+    return settings.refreshStyle == REFRESH_GENTLE
+        ? POMODORO_REFRESH_INTERVAL_SECONDS
+        : POMODORO_RESPONSIVE_REFRESH_INTERVAL_SECONDS;
 }
 
 uint8_t partialRefreshLimit(uint8_t defaultLimit)

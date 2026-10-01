@@ -82,16 +82,62 @@ void drawMenuContent(uint8_t selectedApp)
     drawCenteredText(descriptions[selectedApp], 230);
 }
 
-void drawPomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status)
+void drawPomodoroFocusMark(uint8_t animationFrame, bool active, bool complete, bool paused)
+{
+    constexpr int DOT_COUNT = 5;
+    constexpr int DOT_GAP = 24;
+    constexpr int FIRST_DOT_X = (DISPLAY_WIDTH - ((DOT_COUNT - 1) * DOT_GAP)) / 2;
+    constexpr int DOT_Y = 244;
+
+    if (complete)
+    {
+        display.drawCircle(DISPLAY_WIDTH / 2, DOT_Y, 14, GxEPD_BLACK);
+        display.drawLine(193, DOT_Y, 199, DOT_Y + 6, GxEPD_BLACK);
+        display.drawLine(199, DOT_Y + 6, 209, DOT_Y - 7, GxEPD_BLACK);
+        return;
+    }
+
+    if (paused)
+    {
+        display.fillRect(191, DOT_Y - 10, 6, 20, GxEPD_BLACK);
+        display.fillRect(203, DOT_Y - 10, 6, 20, GxEPD_BLACK);
+        return;
+    }
+
+    for (uint8_t dot = 0; dot < DOT_COUNT; ++dot)
+    {
+        const int x = FIRST_DOT_X + dot * DOT_GAP;
+        if (active && dot == animationFrame % DOT_COUNT)
+        {
+            display.fillCircle(x, DOT_Y, 5, GxEPD_BLACK);
+        }
+        else
+        {
+            display.drawCircle(x, DOT_Y, active ? 4 : 3, GxEPD_BLACK);
+        }
+    }
+}
+
+void drawPomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status,
+                       uint8_t animationFrame, bool active)
 {
     const uint16_t minutes = remainingSeconds / 60;
     const uint8_t seconds = remainingSeconds % 60;
     char timeText[10];
     snprintf(timeText, sizeof(timeText), "%02u:%02u", static_cast<unsigned int>(minutes), static_cast<unsigned int>(seconds));
 
+    char sessionText[24];
+    const uint16_t sessionMinutes = (totalSeconds + 59) / 60;
+    snprintf(sessionText, sizeof(sessionText), "%u MINUTE SESSION",
+             static_cast<unsigned int>(sessionMinutes));
+
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText(sessionText, 76);
+    display.drawLine(138, 88, DISPLAY_WIDTH - 138, 88, GxEPD_BLACK);
+
     setPrimaryFont();
-    drawCenteredText(timeText, 128);
-    setReadingFont();
+    drawCenteredText(timeText, 130);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
     drawCenteredText(status, 158);
 
     display.drawRect(POMODORO_PROGRESS_X, POMODORO_PROGRESS_Y,
@@ -102,14 +148,35 @@ void drawPomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds, const c
         : (static_cast<uint32_t>(POMODORO_PROGRESS_WIDTH - 2) * elapsedSeconds) / totalSeconds;
     if (fillWidth > 0)
     {
-        display.fillRect(POMODORO_PROGRESS_X + 1, POMODORO_PROGRESS_Y + 1,
-                         fillWidth, POMODORO_PROGRESS_HEIGHT - 2, GxEPD_BLACK);
+        display.fillRect(POMODORO_PROGRESS_X + 2, POMODORO_PROGRESS_Y + 2,
+                         fillWidth > 2 ? fillWidth - 2 : fillWidth,
+                         POMODORO_PROGRESS_HEIGHT - 4, GxEPD_BLACK);
     }
 
     char progressText[22];
     const uint16_t progressPercent = totalSeconds == 0 ? 0 : (elapsedSeconds * 100UL) / totalSeconds;
-    snprintf(progressText, sizeof(progressText), "%u%% COMPLETE", static_cast<unsigned int>(progressPercent));
-    drawCenteredText(progressText, 216);
+    snprintf(progressText, sizeof(progressText), "%u%% COMPLETE",
+             static_cast<unsigned int>(progressPercent));
+    drawCenteredText(progressText, 214);
+
+    const bool complete = remainingSeconds == 0;
+    const bool paused = !active && !complete && remainingSeconds < totalSeconds;
+    drawPomodoroFocusMark(animationFrame, active, complete, paused);
+
+    const char* reflection = "SETTLE IN";
+    if (complete)
+    {
+        reflection = "A GOOD SESSION";
+    }
+    else if (paused)
+    {
+        reflection = "TAKE A BREATH";
+    }
+    else if (active)
+    {
+        reflection = "ONE MOMENT AT A TIME";
+    }
+    drawCenteredText(reflection, 272);
 }
 
 void drawBreathingSquare(uint8_t phase)
@@ -482,7 +549,8 @@ void updateSettingsSelection(uint8_t selectedSetting)
     display.setFullWindow();
 }
 
-void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status)
+void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status,
+                  uint8_t animationFrame, bool active)
 {
     display.setRotation(0);
     display.setFullWindow();
@@ -495,13 +563,13 @@ void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* 
         setReadingFont();
         display.fillRect(0, 0, DISPLAY_WIDTH, HEADER_HEIGHT, GxEPD_BLACK);
         display.setTextColor(GxEPD_WHITE);
-        drawCenteredText("POMODORO", 34);
+        drawCenteredText("FOCUS SESSION", 34);
         display.setTextColor(GxEPD_BLACK);
-        drawPomodoroTimer(remainingSeconds, totalSeconds, status);
+        drawPomodoroTimer(remainingSeconds, totalSeconds, status, animationFrame, active);
     } while (display.nextPage());
 }
 
-void updatePomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds)
+void updatePomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds, uint8_t animationFrame)
 {
     display.setRotation(0);
     display.setPartialWindow(0, POMODORO_DYNAMIC_Y, DISPLAY_WIDTH, POMODORO_DYNAMIC_HEIGHT);
@@ -512,7 +580,7 @@ void updatePomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds)
         display.fillRect(0, POMODORO_DYNAMIC_Y, DISPLAY_WIDTH, POMODORO_DYNAMIC_HEIGHT, GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
         setReadingFont();
-        drawPomodoroTimer(remainingSeconds, totalSeconds, "FOCUS IN PROGRESS");
+        drawPomodoroTimer(remainingSeconds, totalSeconds, "FOCUS IN PROGRESS", animationFrame, true);
     } while (display.nextPage());
 
     display.setFullWindow();

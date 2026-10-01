@@ -21,8 +21,9 @@ void showMainMenu(uint8_t selectedApp);
 void updateMainMenuSelection(uint8_t selectedApp);
 void showSettings(uint8_t selectedSetting);
 void updateSettingsSelection(uint8_t selectedSetting);
-void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status);
-void updatePomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds);
+void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* status,
+                  uint8_t animationFrame, bool active);
+void updatePomodoroTimer(uint16_t remainingSeconds, uint16_t totalSeconds, uint8_t animationFrame);
 void showBreathing(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
                    const char* phaseLabel, const char* status);
 void updateBreathingPhase(uint8_t phase, uint8_t currentRound, uint8_t totalRounds,
