@@ -67,12 +67,6 @@ void drawMenuItem(const char* label, int y, bool selected)
 void drawMenuContent(uint8_t selectedApp)
 {
     const char* apps[] = { "QUOTE DISPLAY", "POMODORO", "BREATHING BLOOM", "GLOBAL SETTINGS" };
-    const char* descriptions[] = {
-        "Browse daily quotes",
-        "Focus timer: 25 minutes",
-        "A calm guided breathing rhythm",
-        "Fonts and refresh options"
-    };
 
     display.setTextColor(GxEPD_BLACK);
     applyGlobalFont(GLOBAL_FONT_SMALL);
@@ -80,7 +74,6 @@ void drawMenuContent(uint8_t selectedApp)
     drawMenuItem(apps[1], 138, selectedApp == 1);
     drawMenuItem(apps[2], 168, selectedApp == 2);
     drawMenuItem(apps[3], 198, selectedApp == 3);
-    drawCenteredText(descriptions[selectedApp], 230);
 }
 
 void drawPomodoroProgressRing(uint16_t remainingSeconds, uint16_t totalSeconds)
