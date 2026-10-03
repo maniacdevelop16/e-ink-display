@@ -32,6 +32,8 @@ struct GlobalSettings
     RefreshStyle refreshStyle;
     bool partialRefreshEnabled;
     bool navigationHintsEnabled;
+    uint16_t screensaverTimeoutSeconds;
+    uint16_t deepSleepTimeoutSeconds;
 };
 
 enum QuoteTheme
@@ -57,12 +59,18 @@ void cycleFontSize();
 void cycleRefreshStyle();
 void togglePartialRefresh();
 void toggleNavigationHints();
+void cycleScreensaverTimeout();
+void cycleDeepSleepTimeout();
 void resetSettings();
 
 const char* fontChoiceLabel();
 const char* fontSizeLabel();
 const char* refreshStyleLabel();
+const char* screensaverTimeoutLabel();
+const char* deepSleepTimeoutLabel();
 bool showNavigationHints();
+uint16_t screensaverTimeoutSeconds();
+uint16_t deepSleepTimeoutSeconds();
 // Future pages should use these helpers instead of local display preferences.
 bool usePartialRefresh();
 uint16_t pomodoroRefreshIntervalSeconds();

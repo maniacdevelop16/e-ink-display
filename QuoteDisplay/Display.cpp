@@ -311,27 +311,35 @@ void drawSettingsContent(uint8_t selectedSetting)
     char fontRow[32];
     char sizeRow[32];
     char navigationRow[32];
+    char screensaverRow[32];
+    char sleepRow[32];
     char partialRow[32];
     char refreshRow[32];
     snprintf(fontRow, sizeof(fontRow), "FONT: %s", fontChoiceLabel());
     snprintf(sizeRow, sizeof(sizeRow), "FONT SIZE: %s", fontSizeLabel());
     snprintf(navigationRow, sizeof(navigationRow), "NAVIGATION: %s",
              showNavigationHints() ? "ON" : "OFF");
+    snprintf(screensaverRow, sizeof(screensaverRow), "SCREENSAVER: %s",
+             screensaverTimeoutLabel());
+    snprintf(sleepRow, sizeof(sleepRow), "DEEP SLEEP: %s", deepSleepTimeoutLabel());
     snprintf(partialRow, sizeof(partialRow), "PARTIAL REFRESH: %s",
              getSettings().partialRefreshEnabled ? "ON" : "OFF");
     snprintf(refreshRow, sizeof(refreshRow), "REFRESH: %s", refreshStyleLabel());
     const char* rows[] = {
-        fontRow, sizeRow, navigationRow, partialRow, refreshRow, "RESET DEFAULTS"
+        fontRow, sizeRow, navigationRow, screensaverRow, sleepRow,
+        partialRow, refreshRow, "RESET DEFAULTS"
     };
 
     display.setTextColor(GxEPD_BLACK);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawMenuItem(rows[0], 105, selectedSetting == 0);
-    drawMenuItem(rows[1], 128, selectedSetting == 1);
-    drawMenuItem(rows[2], 151, selectedSetting == 2);
-    drawMenuItem(rows[3], 174, selectedSetting == 3);
-    drawMenuItem(rows[4], 197, selectedSetting == 4);
-    drawMenuItem(rows[5], 220, selectedSetting == 5);
+    drawMenuItem(rows[0], 101, selectedSetting == 0);
+    drawMenuItem(rows[1], 123, selectedSetting == 1);
+    drawMenuItem(rows[2], 145, selectedSetting == 2);
+    drawMenuItem(rows[3], 167, selectedSetting == 3);
+    drawMenuItem(rows[4], 189, selectedSetting == 4);
+    drawMenuItem(rows[5], 211, selectedSetting == 5);
+    drawMenuItem(rows[6], 233, selectedSetting == 6);
+    drawMenuItem(rows[7], 255, selectedSetting == 7);
     drawNavigationHint("UP/DOWN SELECT  PRESS CHANGE");
 }
 }

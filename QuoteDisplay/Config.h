@@ -37,11 +37,11 @@ constexpr uint8_t MENU_PARTIALS_BEFORE_FULL_REFRESH = 8;
 constexpr int MENU_DYNAMIC_Y = 94;
 constexpr int MENU_DYNAMIC_HEIGHT = 148;
 constexpr uint8_t NUM_LAUNCHER_APPS = 4;
-constexpr uint8_t NUM_SETTINGS_ITEMS = 6;
+constexpr uint8_t NUM_SETTINGS_ITEMS = 8;
 constexpr uint8_t NUM_QUOTE_SETTINGS_ITEMS = 4;
 constexpr uint8_t SETTINGS_PARTIALS_BEFORE_FULL_REFRESH = 8;
 constexpr int SETTINGS_DYNAMIC_Y = 92;
-constexpr int SETTINGS_DYNAMIC_HEIGHT = 140;
+constexpr int SETTINGS_DYNAMIC_HEIGHT = 180;
 
 // Pomodoro behavior. The periodic refresh is intentionally conservative for e-paper.
 constexpr uint16_t POMODORO_DURATION_SECONDS = 25 * 60;
@@ -65,4 +65,3 @@ constexpr int BREATHING_DYNAMIC_HEIGHT = 245;
 
 constexpr unsigned long DEBOUNCE_TIME_MS = 80;
 constexpr unsigned long PERSISTENCE_SAVE_DELAY_MS = 3000;
-constexpr unsigned long QUOTE_DEEP_SLEEP_AFTER_MS = 30000;

@@ -144,8 +144,9 @@ void enterQuoteDeepSleep()
 
 void sleepQuoteDisplayWhenIdle()
 {
-    if (currentScreen == QUOTE_DISPLAY &&
-        millis() - quoteLastActivityAt >= QUOTE_DEEP_SLEEP_AFTER_MS)
+    const uint16_t timeoutSeconds = deepSleepTimeoutSeconds();
+    if (currentScreen == QUOTE_DISPLAY && timeoutSeconds > 0 &&
+        millis() - quoteLastActivityAt >= timeoutSeconds * 1000UL)
     {
         enterQuoteDeepSleep();
     }
@@ -727,9 +728,17 @@ void updateUI()
             }
             else if (selectedSetting == 3)
             {
-                togglePartialRefresh();
+                cycleScreensaverTimeout();
             }
             else if (selectedSetting == 4)
+            {
+                cycleDeepSleepTimeout();
+            }
+            else if (selectedSetting == 5)
+            {
+                togglePartialRefresh();
+            }
+            else if (selectedSetting == 6)
             {
                 cycleRefreshStyle();
             }
@@ -738,7 +747,7 @@ void updateUI()
                 resetSettings();
             }
             if (selectedSetting == 0 || selectedSetting == 1 || selectedSetting == 2 ||
-                selectedSetting == 5)
+                selectedSetting == 7)
             {
                 displaySettings();
             }

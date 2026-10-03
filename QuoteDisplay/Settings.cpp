@@ -6,7 +6,13 @@
 
 namespace
 {
-GlobalSettings settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false };
+constexpr uint16_t SCREENSAVER_TIMEOUTS[] = { 0, 10, 20, 30, 60, 120 };
+constexpr uint16_t DEEP_SLEEP_TIMEOUTS[] = { 0, 30, 60, 180, 300, 600 };
+constexpr uint8_t TIMEOUT_OPTION_COUNT = 6;
+
+GlobalSettings settings = {
+    FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30
+};
 QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };
 GlobalSettings persistedSettings = settings;
 QuoteDisplaySettings persistedQuoteSettings = quoteSettings;
@@ -26,6 +32,18 @@ uint8_t persistedLauncher = 0;
 void markPersistenceChanged()
 {
     persistenceChangedAt = millis();
+}
+
+uint8_t timeoutIndex(const uint16_t* options, uint16_t value, uint8_t defaultIndex)
+{
+    for (uint8_t index = 0; index < TIMEOUT_OPTION_COUNT; ++index)
+    {
+        if (options[index] == value)
+        {
+            return index;
+        }
+    }
+    return defaultIndex;
 }
 
 void saveGlobalSettings()
@@ -59,6 +77,12 @@ void initializeSettings()
     settings.refreshStyle = static_cast<RefreshStyle>(savedRefresh < 2 ? savedRefresh : REFRESH_GENTLE);
     settings.partialRefreshEnabled = preferences.getBool("partial", true);
     settings.navigationHintsEnabled = preferences.getBool("navHints", false);
+    const uint16_t savedScreensaver = preferences.getUShort("screenTime", 20);
+    const uint16_t savedDeepSleep = preferences.getUShort("sleepTime", 30);
+    settings.screensaverTimeoutSeconds = SCREENSAVER_TIMEOUTS[
+        timeoutIndex(SCREENSAVER_TIMEOUTS, savedScreensaver, 2)];
+    settings.deepSleepTimeoutSeconds = DEEP_SLEEP_TIMEOUTS[
+        timeoutIndex(DEEP_SLEEP_TIMEOUTS, savedDeepSleep, 1)];
     quoteSettings.autoChangeIntervalSeconds = preferences.getULong("quoteTime", 0);
     quoteSettings.theme = static_cast<QuoteTheme>(savedTheme < 3 ? savedTheme : QUOTE_THEME_QUIET);
     quoteSettings.category = static_cast<QuoteCategory>(
@@ -101,6 +125,14 @@ void flushSettingsPersistence()
         if (settings.navigationHintsEnabled != persistedSettings.navigationHintsEnabled)
         {
             preferences.putBool("navHints", settings.navigationHintsEnabled);
+        }
+        if (settings.screensaverTimeoutSeconds != persistedSettings.screensaverTimeoutSeconds)
+        {
+            preferences.putUShort("screenTime", settings.screensaverTimeoutSeconds);
+        }
+        if (settings.deepSleepTimeoutSeconds != persistedSettings.deepSleepTimeoutSeconds)
+        {
+            preferences.putUShort("sleepTime", settings.deepSleepTimeoutSeconds);
         }
         persistedSettings = settings;
         globalSettingsDirty = false;
@@ -192,9 +224,29 @@ void toggleNavigationHints()
     saveGlobalSettings();
 }
 
+void cycleScreensaverTimeout()
+{
+    const uint8_t index = timeoutIndex(
+        SCREENSAVER_TIMEOUTS, settings.screensaverTimeoutSeconds, 2);
+    settings.screensaverTimeoutSeconds =
+        SCREENSAVER_TIMEOUTS[(index + 1) % TIMEOUT_OPTION_COUNT];
+    saveGlobalSettings();
+}
+
+void cycleDeepSleepTimeout()
+{
+    const uint8_t index = timeoutIndex(
+        DEEP_SLEEP_TIMEOUTS, settings.deepSleepTimeoutSeconds, 1);
+    settings.deepSleepTimeoutSeconds =
+        DEEP_SLEEP_TIMEOUTS[(index + 1) % TIMEOUT_OPTION_COUNT];
+    saveGlobalSettings();
+}
+
 void resetSettings()
 {
-    settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false };
+    settings = {
+        FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30
+    };
     saveGlobalSettings();
 }
 
@@ -221,9 +273,31 @@ const char* refreshStyleLabel()
     return settings.refreshStyle == REFRESH_GENTLE ? "GENTLE" : "RESPONSIVE";
 }
 
+const char* screensaverTimeoutLabel()
+{
+    const char* labels[] = { "OFF", "10 SEC", "20 SEC", "30 SEC", "1 MIN", "2 MIN" };
+    return labels[timeoutIndex(SCREENSAVER_TIMEOUTS, settings.screensaverTimeoutSeconds, 2)];
+}
+
+const char* deepSleepTimeoutLabel()
+{
+    const char* labels[] = { "OFF", "30 SEC", "1 MIN", "3 MIN", "5 MIN", "10 MIN" };
+    return labels[timeoutIndex(DEEP_SLEEP_TIMEOUTS, settings.deepSleepTimeoutSeconds, 1)];
+}
+
 bool showNavigationHints()
 {
     return settings.navigationHintsEnabled;
+}
+
+uint16_t screensaverTimeoutSeconds()
+{
+    return settings.screensaverTimeoutSeconds;
+}
+
+uint16_t deepSleepTimeoutSeconds()
+{
+    return settings.deepSleepTimeoutSeconds;
 }
 
 bool usePartialRefresh()
