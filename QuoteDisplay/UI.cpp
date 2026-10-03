@@ -1,6 +1,9 @@
 #include "UI.h"
 
 #include <Arduino.h>
+#include <driver/rtc_io.h>
+#include <esp_attr.h>
+#include <esp_sleep.h>
 
 #include "Config.h"
 #include "Display.h"
@@ -10,11 +13,16 @@
 
 namespace
 {
+constexpr uint32_t RETAINED_QUOTE_MAGIC = 0x51555445;
+RTC_DATA_ATTR uint32_t retainedQuoteMagic = 0;
+RTC_DATA_ATTR uint8_t retainedQuote = 0;
+
 uint8_t currentQuote = 0;
 uint8_t selectedApp = 0;
 uint8_t selectedSetting = 0;
 uint8_t selectedQuoteSetting = 0;
 unsigned long quoteLastChangedAt = 0;
+unsigned long quoteLastActivityAt = 0;
 uint16_t pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroTotalSeconds = POMODORO_DURATION_SECONDS;
 uint16_t pomodoroLastRenderedSeconds = POMODORO_DURATION_SECONDS;
@@ -67,11 +75,15 @@ enum BreathingState
 
 BreathingState breathingState = BREATHING_READY;
 
-void displayCurrentQuote()
+void displayCurrentQuote(bool persistView = true)
 {
     showQuote(currentQuote);
     quoteLastChangedAt = millis();
-    saveCurrentView();
+    quoteLastActivityAt = quoteLastChangedAt;
+    if (persistView)
+    {
+        saveCurrentView();
+    }
 }
 
 void displayQuoteSettings()
@@ -101,6 +113,42 @@ void updateQuoteChangeTimer()
     currentQuote = (currentQuote + changes) % count;
     quoteLastChangedAt += changes * intervalMs;
     showQuote(currentQuote);
+    quoteLastActivityAt = millis();
+}
+
+void enterQuoteDeepSleep()
+{
+    retainedQuoteMagic = RETAINED_QUOTE_MAGIC;
+    retainedQuote = currentQuote;
+    flushSettingsPersistence();
+
+    rtc_gpio_pullup_en(static_cast<gpio_num_t>(MENU_BUTTON));
+    rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(MENU_BUTTON));
+    esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(MENU_BUTTON), 0);
+
+    const uint32_t intervalSeconds = getQuoteDisplaySettings().autoChangeIntervalSeconds;
+    if (intervalSeconds > 0)
+    {
+        const unsigned long intervalMs = intervalSeconds * 1000UL;
+        const unsigned long elapsedMs = millis() - quoteLastChangedAt;
+        const unsigned long remainingMs = elapsedMs < intervalMs
+            ? intervalMs - elapsedMs
+            : 1;
+        esp_sleep_enable_timer_wakeup(static_cast<uint64_t>(remainingMs) * 1000ULL);
+    }
+
+    prepareDisplayForSleep();
+    Serial.flush();
+    esp_deep_sleep_start();
+}
+
+void sleepQuoteDisplayWhenIdle()
+{
+    if (currentScreen == QUOTE_DISPLAY &&
+        millis() - quoteLastActivityAt >= QUOTE_DEEP_SLEEP_AFTER_MS)
+    {
+        enterQuoteDeepSleep();
+    }
 }
 
 void displayMenu()
@@ -423,10 +471,34 @@ void initializeUI()
 {
     initializeSettings();
     const uint8_t activeQuoteCount = quoteCount(getQuoteDisplaySettings().category);
-    currentQuote = savedQuote() < activeQuoteCount ? savedQuote() : 0;
+    const esp_sleep_wakeup_cause_t wakeCause = esp_sleep_get_wakeup_cause();
+    const bool wokeFromQuoteSleep = retainedQuoteMagic == RETAINED_QUOTE_MAGIC &&
+        (wakeCause == ESP_SLEEP_WAKEUP_EXT0 || wakeCause == ESP_SLEEP_WAKEUP_TIMER);
+    const uint8_t restoredQuote = wokeFromQuoteSleep ? retainedQuote : savedQuote();
+    currentQuote = restoredQuote < activeQuoteCount ? restoredQuote : 0;
     selectedApp = savedLauncherSelection() < NUM_LAUNCHER_APPS ? savedLauncherSelection() : 0;
     const uint8_t previousScreen = savedScreen();
     currentScreen = previousScreen <= SETTINGS ? static_cast<Screen>(previousScreen) : MENU;
+
+    if (wokeFromQuoteSleep && wakeCause == ESP_SLEEP_WAKEUP_EXT0)
+    {
+        retainedQuoteMagic = 0;
+        currentScreen = MENU;
+        displayMenu();
+        saveCurrentView();
+        return;
+    }
+
+    if (wokeFromQuoteSleep && wakeCause == ESP_SLEEP_WAKEUP_TIMER)
+    {
+        currentScreen = QUOTE_DISPLAY;
+        currentQuote = (currentQuote + 1) % activeQuoteCount;
+        retainedQuote = currentQuote;
+        displayCurrentQuote(false);
+        return;
+    }
+
+    retainedQuoteMagic = 0;
 
     if (currentScreen == QUOTE_DISPLAY)
     {
@@ -458,6 +530,11 @@ void updateUI()
 {
     serviceSettingsPersistence();
     const InputEvent event = readInputEvent();
+
+    if (currentScreen == QUOTE_DISPLAY && event != INPUT_NONE)
+    {
+        quoteLastActivityAt = millis();
+    }
 
     if (event == INPUT_MENU)
     {
@@ -517,6 +594,7 @@ void updateUI()
             saveCurrentView();
             displayQuoteSettings();
         }
+        sleepQuoteDisplayWhenIdle();
         return;
     }
 

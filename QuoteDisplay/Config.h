@@ -65,3 +65,4 @@ constexpr int BREATHING_DYNAMIC_HEIGHT = 245;
 
 constexpr unsigned long DEBOUNCE_TIME_MS = 80;
 constexpr unsigned long PERSISTENCE_SAVE_DELAY_MS = 3000;
+constexpr unsigned long QUOTE_DEEP_SLEEP_AFTER_MS = 30000;

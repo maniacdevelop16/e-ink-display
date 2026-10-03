@@ -14,6 +14,7 @@ enum GlobalFontRole
 void applyGlobalFont(GlobalFontRole role);
 
 void initializeDisplay();
+void prepareDisplayForSleep();
 void showQuote(uint8_t index);
 void showQuoteSettings(uint8_t selectedSetting);
 void updateQuoteSettingsSelection(uint8_t selectedSetting);

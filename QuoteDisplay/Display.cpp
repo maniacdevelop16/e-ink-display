@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <SPI.h>
+#include <driver/gpio.h>
 #include <GxEPD2_BW.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
@@ -400,11 +401,21 @@ void initializeDisplay()
 {
     pinMode(EPD_POWER, OUTPUT);
     digitalWrite(EPD_POWER, HIGH);
+    gpio_hold_dis(static_cast<gpio_num_t>(EPD_POWER));
     delay(1000);
 
     SPI.begin(EPD_SCK, -1, EPD_MOSI, EPD_CS);
     delay(500);
     display.init(115200);
+}
+
+void prepareDisplayForSleep()
+{
+    display.hibernate();
+    pinMode(EPD_POWER, OUTPUT);
+    digitalWrite(EPD_POWER, LOW);
+    gpio_hold_en(static_cast<gpio_num_t>(EPD_POWER));
+    gpio_deep_sleep_hold_en();
 }
 
 void showQuote(uint8_t index)

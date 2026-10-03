@@ -1,6 +1,7 @@
 #include "Input.h"
 
 #include <Arduino.h>
+#include <driver/rtc_io.h>
 
 #include "Config.h"
 
@@ -30,6 +31,7 @@ bool wasPressed(uint8_t pin)
 
 void initializeInput()
 {
+    rtc_gpio_deinit(static_cast<gpio_num_t>(MENU_BUTTON));
     pinMode(ROTARY_UP, INPUT_PULLUP);
     pinMode(ROTARY_DOWN, INPUT_PULLUP);
     pinMode(ROTARY_PRESS, INPUT_PULLUP);
