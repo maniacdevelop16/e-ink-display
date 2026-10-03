@@ -6,7 +6,7 @@
 
 namespace
 {
-GlobalSettings settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true };
+GlobalSettings settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false };
 QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };
 Preferences preferences;
 bool preferencesReady = false;
@@ -22,6 +22,7 @@ void saveGlobalSettings()
     preferences.putUChar("fontSize", settings.fontSize);
     preferences.putUChar("refresh", settings.refreshStyle);
     preferences.putBool("partial", settings.partialRefreshEnabled);
+    preferences.putBool("navHints", settings.navigationHintsEnabled);
 }
 
 void saveQuoteSettings()
@@ -54,6 +55,7 @@ void initializeSettings()
     settings.fontSize = static_cast<FontSize>(savedFontSize < 3 ? savedFontSize : FONT_SIZE_MEDIUM);
     settings.refreshStyle = static_cast<RefreshStyle>(savedRefresh < 2 ? savedRefresh : REFRESH_GENTLE);
     settings.partialRefreshEnabled = preferences.getBool("partial", true);
+    settings.navigationHintsEnabled = preferences.getBool("navHints", false);
     quoteSettings.autoChangeIntervalSeconds = preferences.getULong("quoteTime", 0);
     quoteSettings.theme = static_cast<QuoteTheme>(savedTheme < 3 ? savedTheme : QUOTE_THEME_QUIET);
     quoteSettings.category = static_cast<QuoteCategory>(
@@ -89,9 +91,15 @@ void togglePartialRefresh()
     saveGlobalSettings();
 }
 
+void toggleNavigationHints()
+{
+    settings.navigationHintsEnabled = !settings.navigationHintsEnabled;
+    saveGlobalSettings();
+}
+
 void resetSettings()
 {
-    settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true };
+    settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false };
     saveGlobalSettings();
 }
 
@@ -116,6 +124,11 @@ const char* fontSizeLabel()
 const char* refreshStyleLabel()
 {
     return settings.refreshStyle == REFRESH_GENTLE ? "GENTLE" : "RESPONSIVE";
+}
+
+bool showNavigationHints()
+{
+    return settings.navigationHintsEnabled;
 }
 
 bool usePartialRefresh()

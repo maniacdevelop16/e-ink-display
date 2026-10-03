@@ -47,6 +47,20 @@ void setPrimaryFont()
     applyGlobalFont(GLOBAL_FONT_PRIMARY);
 }
 
+void drawNavigationHint(const char* text)
+{
+    if (!showNavigationHints())
+    {
+        return;
+    }
+
+    // The built-in 5x7 font stays deliberately quieter than all content fonts.
+    display.setFont(nullptr);
+    display.setTextSize(1);
+    display.setTextColor(GxEPD_BLACK);
+    drawCenteredText(text, 289);
+}
+
 void drawMenuItem(const char* label, int y, bool selected)
 {
     int16_t x1;
@@ -74,6 +88,7 @@ void drawMenuContent(uint8_t selectedApp)
     drawMenuItem(apps[1], 138, selectedApp == 1);
     drawMenuItem(apps[2], 168, selectedApp == 2);
     drawMenuItem(apps[3], 198, selectedApp == 3);
+    drawNavigationHint("UP/DOWN SELECT  PRESS OPEN");
 }
 
 void drawPomodoroProgressRing(uint16_t remainingSeconds, uint16_t totalSeconds)
@@ -189,6 +204,7 @@ void drawBreathingContent(uint8_t phase, uint8_t phaseStep, uint8_t currentRound
     drawBreathingBloom(phase, phaseStep);
     applyGlobalFont(GLOBAL_FONT_SMALL);
     drawCenteredText(roundText, 278);
+    drawNavigationHint("UP RESET  DOWN ROUNDS  PRESS START/PAUSE");
 }
 
 void drawQuoteLines(const Quote& quote, int firstLineY, int lineSpacing)
@@ -220,6 +236,7 @@ void drawQuietQuote(const Quote& quote, uint8_t index, uint8_t count, const char
     snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
              static_cast<unsigned int>(index + 1), static_cast<unsigned int>(count));
     drawCenteredText(counter, 276);
+    drawNavigationHint("UP/DOWN QUOTE  PRESS OPTIONS");
 }
 
 void drawMinimalQuote(const Quote& quote, uint8_t index, uint8_t count, const char* category)
@@ -240,6 +257,7 @@ void drawMinimalQuote(const Quote& quote, uint8_t index, uint8_t count, const ch
     snprintf(counter, sizeof(counter), "%u / %u", static_cast<unsigned int>(index + 1),
              static_cast<unsigned int>(count));
     drawCenteredText(counter, 276);
+    drawNavigationHint("UP/DOWN QUOTE  PRESS OPTIONS");
 }
 
 void drawFocusQuote(const Quote& quote, uint8_t index, uint8_t count, const char* category)
@@ -264,6 +282,7 @@ void drawFocusQuote(const Quote& quote, uint8_t index, uint8_t count, const char
     snprintf(counter, sizeof(counter), "THOUGHT %u OF %u",
              static_cast<unsigned int>(index + 1), static_cast<unsigned int>(count));
     drawCenteredText(counter, 276);
+    drawNavigationHint("UP/DOWN QUOTE  PRESS OPTIONS");
 }
 
 void drawQuoteSettingsContent(uint8_t selectedSetting)
@@ -283,28 +302,36 @@ void drawQuoteSettingsContent(uint8_t selectedSetting)
     drawMenuItem(rows[1], 138, selectedSetting == 1);
     drawMenuItem(rows[2], 168, selectedSetting == 2);
     drawMenuItem(rows[3], 198, selectedSetting == 3);
+    drawNavigationHint("UP/DOWN SELECT  PRESS CHANGE");
 }
 
 void drawSettingsContent(uint8_t selectedSetting)
 {
     char fontRow[32];
     char sizeRow[32];
+    char navigationRow[32];
     char partialRow[32];
     char refreshRow[32];
     snprintf(fontRow, sizeof(fontRow), "FONT: %s", fontChoiceLabel());
     snprintf(sizeRow, sizeof(sizeRow), "FONT SIZE: %s", fontSizeLabel());
+    snprintf(navigationRow, sizeof(navigationRow), "NAVIGATION: %s",
+             showNavigationHints() ? "ON" : "OFF");
     snprintf(partialRow, sizeof(partialRow), "PARTIAL REFRESH: %s",
              getSettings().partialRefreshEnabled ? "ON" : "OFF");
     snprintf(refreshRow, sizeof(refreshRow), "REFRESH: %s", refreshStyleLabel());
-    const char* rows[] = { fontRow, sizeRow, partialRow, refreshRow, "RESET DEFAULTS" };
+    const char* rows[] = {
+        fontRow, sizeRow, navigationRow, partialRow, refreshRow, "RESET DEFAULTS"
+    };
 
     display.setTextColor(GxEPD_BLACK);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawMenuItem(rows[0], 108, selectedSetting == 0);
-    drawMenuItem(rows[1], 133, selectedSetting == 1);
-    drawMenuItem(rows[2], 158, selectedSetting == 2);
-    drawMenuItem(rows[3], 183, selectedSetting == 3);
-    drawMenuItem(rows[4], 208, selectedSetting == 4);
+    drawMenuItem(rows[0], 105, selectedSetting == 0);
+    drawMenuItem(rows[1], 128, selectedSetting == 1);
+    drawMenuItem(rows[2], 151, selectedSetting == 2);
+    drawMenuItem(rows[3], 174, selectedSetting == 3);
+    drawMenuItem(rows[4], 197, selectedSetting == 4);
+    drawMenuItem(rows[5], 220, selectedSetting == 5);
+    drawNavigationHint("UP/DOWN SELECT  PRESS CHANGE");
 }
 }
 
@@ -531,6 +558,7 @@ void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* 
         drawCenteredText("POMODORO", 34);
         display.setTextColor(GxEPD_BLACK);
         drawPomodoroTimer(remainingSeconds, totalSeconds, status);
+        drawNavigationHint("UP RESET  DOWN +5 MIN  PRESS START/PAUSE");
     } while (display.nextPage());
 }
 

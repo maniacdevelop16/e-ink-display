@@ -645,9 +645,13 @@ void updateUI()
             }
             else if (selectedSetting == 2)
             {
-                togglePartialRefresh();
+                toggleNavigationHints();
             }
             else if (selectedSetting == 3)
+            {
+                togglePartialRefresh();
+            }
+            else if (selectedSetting == 4)
             {
                 cycleRefreshStyle();
             }
@@ -655,7 +659,8 @@ void updateUI()
             {
                 resetSettings();
             }
-            if (selectedSetting == 0 || selectedSetting == 1 || selectedSetting == 4)
+            if (selectedSetting == 0 || selectedSetting == 1 || selectedSetting == 2 ||
+                selectedSetting == 5)
             {
                 displaySettings();
             }

@@ -31,6 +31,7 @@ struct GlobalSettings
     FontSize fontSize;
     RefreshStyle refreshStyle;
     bool partialRefreshEnabled;
+    bool navigationHintsEnabled;
 };
 
 enum QuoteTheme
@@ -53,11 +54,13 @@ void cycleFontChoice();
 void cycleFontSize();
 void cycleRefreshStyle();
 void togglePartialRefresh();
+void toggleNavigationHints();
 void resetSettings();
 
 const char* fontChoiceLabel();
 const char* fontSizeLabel();
 const char* refreshStyleLabel();
+bool showNavigationHints();
 // Future pages should use these helpers instead of local display preferences.
 bool usePartialRefresh();
 uint16_t pomodoroRefreshIntervalSeconds();
