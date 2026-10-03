@@ -21,6 +21,7 @@ uint8_t currentQuote = 0;
 uint8_t selectedApp = 0;
 uint8_t selectedSetting = 0;
 uint8_t selectedQuoteSetting = 0;
+unsigned long lastUserActivityAt = 0;
 unsigned long quoteLastChangedAt = 0;
 unsigned long quoteLastActivityAt = 0;
 uint16_t pomodoroRemainingSeconds = POMODORO_DURATION_SECONDS;
@@ -150,6 +151,22 @@ void sleepQuoteDisplayWhenIdle()
     {
         enterQuoteDeepSleep();
     }
+}
+
+bool showQuoteScreensaverWhenIdle()
+{
+    const bool supportsScreensaver = currentScreen == MENU ||
+        currentScreen == SETTINGS || currentScreen == QUOTE_SETTINGS;
+    const uint16_t timeoutSeconds = screensaverTimeoutSeconds();
+    if (!supportsScreensaver || timeoutSeconds == 0 ||
+        millis() - lastUserActivityAt < timeoutSeconds * 1000UL)
+    {
+        return false;
+    }
+
+    currentScreen = QUOTE_DISPLAY;
+    displayCurrentQuote();
+    return true;
 }
 
 void displayMenu()
@@ -487,6 +504,7 @@ void initializeUI()
         currentScreen = MENU;
         displayMenu();
         saveCurrentView();
+        lastUserActivityAt = millis();
         return;
     }
 
@@ -496,6 +514,7 @@ void initializeUI()
         currentQuote = (currentQuote + 1) % activeQuoteCount;
         retainedQuote = currentQuote;
         displayCurrentQuote(false);
+        lastUserActivityAt = millis();
         return;
     }
 
@@ -525,12 +544,23 @@ void initializeUI()
     {
         displayMenu();
     }
+    lastUserActivityAt = millis();
 }
 
 void updateUI()
 {
     serviceSettingsPersistence();
     const InputEvent event = readInputEvent();
+
+    if (event != INPUT_NONE)
+    {
+        lastUserActivityAt = millis();
+    }
+
+    if (event == INPUT_NONE && showQuoteScreensaverWhenIdle())
+    {
+        return;
+    }
 
     if (currentScreen == QUOTE_DISPLAY && event != INPUT_NONE)
     {
