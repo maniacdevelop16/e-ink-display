@@ -205,7 +205,7 @@ void drawBreathingContent(uint8_t phase, uint8_t phaseStep, uint8_t currentRound
     drawBreathingBloom(phase, phaseStep);
     applyGlobalFont(GLOBAL_FONT_SMALL);
     drawCenteredText(roundText, 278);
-    drawNavigationHint("UP RESET  DOWN ROUNDS  PRESS START/PAUSE");
+    drawNavigationHint("DOWN RESET  UP ROUNDS  PRESS START/PAUSE");
 }
 
 void drawQuoteLines(const Quote& quote, int firstLineY, int lineSpacing)
@@ -577,7 +577,7 @@ void showPomodoro(uint16_t remainingSeconds, uint16_t totalSeconds, const char* 
         drawCenteredText("POMODORO", 34);
         display.setTextColor(GxEPD_BLACK);
         drawPomodoroTimer(remainingSeconds, totalSeconds, status);
-        drawNavigationHint("UP RESET  DOWN +5 MIN  PRESS START/PAUSE");
+        drawNavigationHint("DOWN RESET  UP +5 MIN  PRESS START/PAUSE");
     } while (display.nextPage());
 }
 
