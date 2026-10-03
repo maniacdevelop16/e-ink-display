@@ -49,6 +49,8 @@ struct QuoteDisplaySettings
 };
 
 void initializeSettings();
+void serviceSettingsPersistence();
+void flushSettingsPersistence();
 const GlobalSettings& getSettings();
 void cycleFontChoice();
 void cycleFontSize();

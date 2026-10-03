@@ -8,33 +8,36 @@ namespace
 {
 GlobalSettings settings = { FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false };
 QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };
+GlobalSettings persistedSettings = settings;
+QuoteDisplaySettings persistedQuoteSettings = quoteSettings;
 Preferences preferences;
 bool preferencesReady = false;
+bool globalSettingsDirty = false;
+bool quoteSettingsDirty = false;
+bool resumeStateDirty = false;
+unsigned long persistenceChangedAt = 0;
+uint8_t resumeScreen = 0;
+uint8_t resumeQuote = 0;
+uint8_t resumeLauncher = 0;
+uint8_t persistedScreen = 0;
+uint8_t persistedQuote = 0;
+uint8_t persistedLauncher = 0;
+
+void markPersistenceChanged()
+{
+    persistenceChangedAt = millis();
+}
 
 void saveGlobalSettings()
 {
-    if (!preferencesReady)
-    {
-        return;
-    }
-
-    preferences.putUChar("font", settings.fontChoice);
-    preferences.putUChar("fontSize", settings.fontSize);
-    preferences.putUChar("refresh", settings.refreshStyle);
-    preferences.putBool("partial", settings.partialRefreshEnabled);
-    preferences.putBool("navHints", settings.navigationHintsEnabled);
+    globalSettingsDirty = true;
+    markPersistenceChanged();
 }
 
 void saveQuoteSettings()
 {
-    if (!preferencesReady)
-    {
-        return;
-    }
-
-    preferences.putULong("quoteTime", quoteSettings.autoChangeIntervalSeconds);
-    preferences.putUChar("quoteTheme", quoteSettings.theme);
-    preferences.putUChar("quoteCat", quoteSettings.category);
+    quoteSettingsDirty = true;
+    markPersistenceChanged();
 }
 }
 
@@ -60,6 +63,98 @@ void initializeSettings()
     quoteSettings.theme = static_cast<QuoteTheme>(savedTheme < 3 ? savedTheme : QUOTE_THEME_QUIET);
     quoteSettings.category = static_cast<QuoteCategory>(
         savedCategory < QUOTE_CATEGORY_COUNT ? savedCategory : QUOTE_CATEGORY_DEFAULT);
+    resumeScreen = preferences.getUChar("screen", 0);
+    resumeQuote = preferences.getUChar("quote", 0);
+    resumeLauncher = preferences.getUChar("launcher", 0);
+    persistedSettings = settings;
+    persistedQuoteSettings = quoteSettings;
+    persistedScreen = resumeScreen;
+    persistedQuote = resumeQuote;
+    persistedLauncher = resumeLauncher;
+}
+
+void flushSettingsPersistence()
+{
+    if (!preferencesReady)
+    {
+        return;
+    }
+
+    if (globalSettingsDirty)
+    {
+        if (settings.fontChoice != persistedSettings.fontChoice)
+        {
+            preferences.putUChar("font", settings.fontChoice);
+        }
+        if (settings.fontSize != persistedSettings.fontSize)
+        {
+            preferences.putUChar("fontSize", settings.fontSize);
+        }
+        if (settings.refreshStyle != persistedSettings.refreshStyle)
+        {
+            preferences.putUChar("refresh", settings.refreshStyle);
+        }
+        if (settings.partialRefreshEnabled != persistedSettings.partialRefreshEnabled)
+        {
+            preferences.putBool("partial", settings.partialRefreshEnabled);
+        }
+        if (settings.navigationHintsEnabled != persistedSettings.navigationHintsEnabled)
+        {
+            preferences.putBool("navHints", settings.navigationHintsEnabled);
+        }
+        persistedSettings = settings;
+        globalSettingsDirty = false;
+    }
+
+    if (quoteSettingsDirty)
+    {
+        if (quoteSettings.autoChangeIntervalSeconds !=
+            persistedQuoteSettings.autoChangeIntervalSeconds)
+        {
+            preferences.putULong("quoteTime", quoteSettings.autoChangeIntervalSeconds);
+        }
+        if (quoteSettings.theme != persistedQuoteSettings.theme)
+        {
+            preferences.putUChar("quoteTheme", quoteSettings.theme);
+        }
+        if (quoteSettings.category != persistedQuoteSettings.category)
+        {
+            preferences.putUChar("quoteCat", quoteSettings.category);
+        }
+        persistedQuoteSettings = quoteSettings;
+        quoteSettingsDirty = false;
+    }
+
+    if (resumeStateDirty)
+    {
+        if (resumeScreen != persistedScreen)
+        {
+            preferences.putUChar("screen", resumeScreen);
+        }
+        if (resumeQuote != persistedQuote)
+        {
+            preferences.putUChar("quote", resumeQuote);
+        }
+        if (resumeLauncher != persistedLauncher)
+        {
+            preferences.putUChar("launcher", resumeLauncher);
+        }
+        persistedScreen = resumeScreen;
+        persistedQuote = resumeQuote;
+        persistedLauncher = resumeLauncher;
+        resumeStateDirty = false;
+    }
+}
+
+void serviceSettingsPersistence()
+{
+    if ((!globalSettingsDirty && !quoteSettingsDirty && !resumeStateDirty) ||
+        millis() - persistenceChangedAt < PERSISTENCE_SAVE_DELAY_MS)
+    {
+        return;
+    }
+
+    flushSettingsPersistence();
 }
 
 const GlobalSettings& getSettings()
@@ -210,27 +305,29 @@ const char* quoteThemeLabel()
 
 uint8_t savedScreen()
 {
-    return preferencesReady ? preferences.getUChar("screen", 0) : 0;
+    return resumeScreen;
 }
 
 uint8_t savedQuote()
 {
-    return preferencesReady ? preferences.getUChar("quote", 0) : 0;
+    return resumeQuote;
 }
 
 uint8_t savedLauncherSelection()
 {
-    return preferencesReady ? preferences.getUChar("launcher", 0) : 0;
+    return resumeLauncher;
 }
 
 void saveResumeState(uint8_t screen, uint8_t quote, uint8_t launcherSelection)
 {
-    if (!preferencesReady)
+    if (screen == resumeScreen && quote == resumeQuote && launcherSelection == resumeLauncher)
     {
         return;
     }
 
-    preferences.putUChar("screen", screen);
-    preferences.putUChar("quote", quote);
-    preferences.putUChar("launcher", launcherSelection);
+    resumeScreen = screen;
+    resumeQuote = quote;
+    resumeLauncher = launcherSelection;
+    resumeStateDirty = true;
+    markPersistenceChanged();
 }

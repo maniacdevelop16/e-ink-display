@@ -101,7 +101,6 @@ void updateQuoteChangeTimer()
     currentQuote = (currentQuote + changes) % count;
     quoteLastChangedAt += changes * intervalMs;
     showQuote(currentQuote);
-    saveCurrentView();
 }
 
 void displayMenu()
@@ -457,6 +456,7 @@ void initializeUI()
 
 void updateUI()
 {
+    serviceSettingsPersistence();
     const InputEvent event = readInputEvent();
 
     if (event == INPUT_MENU)
