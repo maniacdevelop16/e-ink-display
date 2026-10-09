@@ -276,7 +276,8 @@ void sleepQuoteDisplayWhenIdle()
 bool showQuoteScreensaverWhenIdle()
 {
     const bool supportsScreensaver = currentScreen == MENU ||
-        currentScreen == SETTINGS || currentScreen == QUOTE_SETTINGS;
+        currentScreen == SETTINGS || currentScreen == QUOTE_SETTINGS ||
+        (currentScreen == QUOTE_DISPLAY && !quoteScreensaverMode);
     const uint16_t timeoutSeconds = screensaverTimeoutSeconds();
     if (!supportsScreensaver || timeoutSeconds == 0 ||
         millis() - lastUserActivityAt < timeoutSeconds * 1000UL)
