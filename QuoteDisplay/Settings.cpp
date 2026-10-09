@@ -351,6 +351,13 @@ void cycleQuoteCategory()
     saveQuoteSettings();
 }
 
+void cycleQuoteCategoryBackward()
+{
+    quoteSettings.category = static_cast<QuoteCategory>(
+        (quoteSettings.category + QUOTE_CATEGORY_COUNT - 1) % QUOTE_CATEGORY_COUNT);
+    saveQuoteSettings();
+}
+
 void resetQuoteDisplaySettings()
 {
     quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };

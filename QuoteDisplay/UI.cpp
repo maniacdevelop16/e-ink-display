@@ -93,6 +93,35 @@ void displayQuoteSettings()
     quoteSettingsPartialRefreshCount = 0;
 }
 
+void advanceQuoteForward(uint32_t steps = 1)
+{
+    while (steps-- > 0)
+    {
+        const uint8_t count = quoteCount(getQuoteDisplaySettings().category);
+        if (currentQuote + 1 < count)
+        {
+            ++currentQuote;
+        }
+        else
+        {
+            currentQuote = 0;
+            cycleQuoteCategory();
+        }
+    }
+}
+
+void advanceQuoteBackward()
+{
+    if (currentQuote > 0)
+    {
+        --currentQuote;
+        return;
+    }
+
+    cycleQuoteCategoryBackward();
+    currentQuote = quoteCount(getQuoteDisplaySettings().category) - 1;
+}
+
 void updateQuoteChangeTimer()
 {
     const uint32_t intervalSeconds = getQuoteDisplaySettings().autoChangeIntervalSeconds;
@@ -110,8 +139,7 @@ void updateQuoteChangeTimer()
     }
 
     const uint32_t changes = elapsedMs / intervalMs;
-    const uint8_t count = quoteCount(getQuoteDisplaySettings().category);
-    currentQuote = (currentQuote + changes) % count;
+    advanceQuoteForward(changes);
     quoteLastChangedAt += changes * intervalMs;
     showQuote(currentQuote);
     quoteLastActivityAt = millis();
@@ -511,7 +539,7 @@ void initializeUI()
     if (wokeFromQuoteSleep && wakeCause == ESP_SLEEP_WAKEUP_TIMER)
     {
         currentScreen = QUOTE_DISPLAY;
-        currentQuote = (currentQuote + 1) % activeQuoteCount;
+        advanceQuoteForward();
         retainedQuote = currentQuote;
         displayCurrentQuote(false);
         lastUserActivityAt = millis();
@@ -609,14 +637,12 @@ void updateUI()
 
         if (event == INPUT_NEXT)
         {
-            const uint8_t count = quoteCount(getQuoteDisplaySettings().category);
-            currentQuote = (currentQuote + 1) % count;
+            advanceQuoteForward();
             displayCurrentQuote();
         }
         else if (event == INPUT_PREVIOUS)
         {
-            const uint8_t count = quoteCount(getQuoteDisplaySettings().category);
-            currentQuote = (currentQuote + count - 1) % count;
+            advanceQuoteBackward();
             displayCurrentQuote();
         }
         else if (event == INPUT_PRESS)

@@ -80,6 +80,7 @@ const QuoteDisplaySettings& getQuoteDisplaySettings();
 void cycleQuoteChangeInterval();
 void cycleQuoteTheme();
 void cycleQuoteCategory();
+void cycleQuoteCategoryBackward();
 void resetQuoteDisplaySettings();
 const char* quoteChangeIntervalLabel();
 const char* quoteThemeLabel();
