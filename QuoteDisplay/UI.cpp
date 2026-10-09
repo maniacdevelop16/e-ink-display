@@ -649,8 +649,8 @@ void initializeUI()
         retainedTimerWakeReason = TIMER_WAKE_NONE;
         retainedQuote = currentQuote;
         displayCurrentQuote(false);
-        lastUserActivityAt = millis();
-        return;
+        // The e-paper keeps the refreshed quote visible without keeping the ESP32 awake.
+        enterQuoteDeepSleep();
     }
 
     retainedQuoteMagic = 0;
