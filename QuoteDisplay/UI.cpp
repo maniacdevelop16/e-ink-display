@@ -788,6 +788,11 @@ void updateUI()
             else if (selectedQuoteSetting == 1)
             {
                 cycleQuoteChangeInterval();
+                if (!dailyMorningEnabled())
+                {
+                    dailyScheduleMagic = 0;
+                    nextDailyQuoteAt = 0;
+                }
             }
             else if (selectedQuoteSetting == 2)
             {

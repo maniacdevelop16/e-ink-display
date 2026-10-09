@@ -250,6 +250,10 @@ void cycleDeepSleepTimeout()
 void setDailyMorningEnabled(bool enabled)
 {
     quoteSettings.dailyMorningEnabled = enabled;
+    if (enabled)
+    {
+        quoteSettings.autoChangeIntervalSeconds = 0;
+    }
     saveQuoteSettings();
 }
 
@@ -356,6 +360,10 @@ void cycleQuoteChangeInterval()
         index = 0;
     }
     quoteSettings.autoChangeIntervalSeconds = intervals[(index + 1) % 7];
+    if (quoteSettings.autoChangeIntervalSeconds > 0)
+    {
+        quoteSettings.dailyMorningEnabled = false;
+    }
     saveQuoteSettings();
 }
 
