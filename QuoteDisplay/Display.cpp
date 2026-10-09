@@ -286,6 +286,18 @@ void drawFocusQuote(const Quote& quote, uint8_t index, uint8_t count, const char
     drawNavigationHint("UP/DOWN QUOTE  PRESS OPTIONS");
 }
 
+void drawScreensaverQuote(const Quote& quote)
+{
+    display.fillScreen(GxEPD_WHITE);
+    display.setTextColor(GxEPD_BLACK);
+    drawQuoteLines(quote, 118, 34);
+
+    char authorText[50];
+    snprintf(authorText, sizeof(authorText), "- %s", quote.author);
+    applyGlobalFont(GLOBAL_FONT_SMALL);
+    drawCenteredText(authorText, 232);
+}
+
 void drawQuoteSettingsContent(uint8_t selectedSetting)
 {
     char categoryRow[34];
@@ -426,7 +438,7 @@ void prepareDisplayForSleep()
     gpio_deep_sleep_hold_en();
 }
 
-void showQuote(uint8_t index)
+void showQuote(uint8_t index, bool screensaverMode)
 {
     const QuoteCategory category = getQuoteDisplaySettings().category;
     const uint8_t count = quoteCount(category);
@@ -439,7 +451,11 @@ void showQuote(uint8_t index)
 
     do
     {
-        switch (getQuoteDisplaySettings().theme)
+        if (screensaverMode)
+        {
+            drawScreensaverQuote(quote);
+        }
+        else switch (getQuoteDisplaySettings().theme)
         {
             case QUOTE_THEME_QUIET:
                 drawQuietQuote(quote, index, count, categoryLabel);

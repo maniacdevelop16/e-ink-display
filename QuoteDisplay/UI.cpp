@@ -16,11 +16,13 @@ namespace
 constexpr uint32_t RETAINED_QUOTE_MAGIC = 0x51555445;
 RTC_DATA_ATTR uint32_t retainedQuoteMagic = 0;
 RTC_DATA_ATTR uint8_t retainedQuote = 0;
+RTC_DATA_ATTR bool retainedQuoteScreensaverMode = false;
 
 uint8_t currentQuote = 0;
 uint8_t selectedApp = 0;
 uint8_t selectedSetting = 0;
 uint8_t selectedQuoteSetting = 0;
+bool quoteScreensaverMode = false;
 unsigned long lastUserActivityAt = 0;
 unsigned long quoteLastChangedAt = 0;
 unsigned long quoteLastActivityAt = 0;
@@ -78,7 +80,7 @@ BreathingState breathingState = BREATHING_READY;
 
 void displayCurrentQuote(bool persistView = true)
 {
-    showQuote(currentQuote);
+    showQuote(currentQuote, quoteScreensaverMode);
     quoteLastChangedAt = millis();
     quoteLastActivityAt = quoteLastChangedAt;
     if (persistView)
@@ -141,7 +143,7 @@ void updateQuoteChangeTimer()
     const uint32_t changes = elapsedMs / intervalMs;
     advanceQuoteForward(changes);
     quoteLastChangedAt += changes * intervalMs;
-    showQuote(currentQuote);
+    showQuote(currentQuote, quoteScreensaverMode);
     quoteLastActivityAt = millis();
 }
 
@@ -149,6 +151,7 @@ void enterQuoteDeepSleep()
 {
     retainedQuoteMagic = RETAINED_QUOTE_MAGIC;
     retainedQuote = currentQuote;
+    retainedQuoteScreensaverMode = quoteScreensaverMode;
     flushSettingsPersistence();
 
     rtc_gpio_pullup_en(static_cast<gpio_num_t>(MENU_BUTTON));
@@ -193,6 +196,7 @@ bool showQuoteScreensaverWhenIdle()
     }
 
     currentScreen = QUOTE_DISPLAY;
+    quoteScreensaverMode = true;
     displayCurrentQuote();
     return true;
 }
@@ -472,6 +476,7 @@ void openSelectedApp()
     if (selectedApp == 0)
     {
         currentScreen = QUOTE_DISPLAY;
+        quoteScreensaverMode = false;
         displayCurrentQuote();
     }
     else if (selectedApp == 1)
@@ -495,6 +500,7 @@ void openSelectedApp()
 void returnToMenu()
 {
     currentScreen = MENU;
+    quoteScreensaverMode = false;
     displayMenu();
     saveCurrentView();
 }
@@ -529,6 +535,7 @@ void initializeUI()
     if (wokeFromQuoteSleep && wakeCause == ESP_SLEEP_WAKEUP_EXT0)
     {
         retainedQuoteMagic = 0;
+        quoteScreensaverMode = false;
         currentScreen = MENU;
         displayMenu();
         saveCurrentView();
@@ -539,6 +546,7 @@ void initializeUI()
     if (wokeFromQuoteSleep && wakeCause == ESP_SLEEP_WAKEUP_TIMER)
     {
         currentScreen = QUOTE_DISPLAY;
+        quoteScreensaverMode = retainedQuoteScreensaverMode;
         advanceQuoteForward();
         retainedQuote = currentQuote;
         displayCurrentQuote(false);
@@ -547,6 +555,7 @@ void initializeUI()
     }
 
     retainedQuoteMagic = 0;
+    quoteScreensaverMode = false;
 
     if (currentScreen == QUOTE_DISPLAY)
     {
@@ -592,6 +601,7 @@ void updateUI()
 
     if (currentScreen == QUOTE_DISPLAY && event != INPUT_NONE)
     {
+        quoteScreensaverMode = false;
         quoteLastActivityAt = millis();
     }
 

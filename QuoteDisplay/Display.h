@@ -15,7 +15,7 @@ void applyGlobalFont(GlobalFontRole role);
 
 void initializeDisplay();
 void prepareDisplayForSleep();
-void showQuote(uint8_t index);
+void showQuote(uint8_t index, bool screensaverMode);
 void showQuoteSettings(uint8_t selectedSetting);
 void updateQuoteSettingsSelection(uint8_t selectedSetting);
 void showMainMenu(uint8_t selectedApp);
