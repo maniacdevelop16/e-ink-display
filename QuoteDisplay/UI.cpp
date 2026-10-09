@@ -4,6 +4,7 @@
 #include <driver/rtc_io.h>
 #include <esp_attr.h>
 #include <esp_sleep.h>
+#include <time.h>
 
 #include "Config.h"
 #include "Display.h"
@@ -14,9 +15,20 @@
 namespace
 {
 constexpr uint32_t RETAINED_QUOTE_MAGIC = 0x51555445;
+constexpr uint32_t DAILY_SCHEDULE_MAGIC = 0x4D4F524E;
+enum TimerWakeReason : uint8_t
+{
+    TIMER_WAKE_NONE,
+    TIMER_WAKE_AUTO_QUOTE,
+    TIMER_WAKE_DAILY_QUOTE
+};
+
 RTC_DATA_ATTR uint32_t retainedQuoteMagic = 0;
 RTC_DATA_ATTR uint8_t retainedQuote = 0;
 RTC_DATA_ATTR bool retainedQuoteScreensaverMode = false;
+RTC_DATA_ATTR uint32_t dailyScheduleMagic = 0;
+RTC_DATA_ATTR time_t nextDailyQuoteAt = 0;
+RTC_DATA_ATTR uint8_t retainedTimerWakeReason = TIMER_WAKE_NONE;
 
 uint8_t currentQuote = 0;
 uint8_t selectedApp = 0;
@@ -124,6 +136,60 @@ void advanceQuoteBackward()
     currentQuote = quoteCount(getQuoteDisplaySettings().category) - 1;
 }
 
+uint32_t advanceDailyQuoteIfDue(bool forceUpdate = false)
+{
+    if (!dailyMorningEnabled() || dailyScheduleMagic != DAILY_SCHEDULE_MAGIC)
+    {
+        return 0;
+    }
+
+    const time_t now = time(nullptr);
+    if (!forceUpdate && now < nextDailyQuoteAt)
+    {
+        return 0;
+    }
+
+    uint32_t changes = 1;
+    if (now > nextDailyQuoteAt)
+    {
+        changes += static_cast<uint32_t>(
+            (now - nextDailyQuoteAt) / DAILY_QUOTE_INTERVAL_SECONDS);
+    }
+    advanceQuoteForward(changes);
+    nextDailyQuoteAt += static_cast<time_t>(changes) * DAILY_QUOTE_INTERVAL_SECONDS;
+    retainedQuote = currentQuote;
+    return changes;
+}
+
+void toggleDailyMorningSchedule()
+{
+    if (dailyMorningEnabled())
+    {
+        setDailyMorningEnabled(false);
+        dailyScheduleMagic = 0;
+        nextDailyQuoteAt = 0;
+        return;
+    }
+
+    setDailyMorningEnabled(true);
+    dailyScheduleMagic = DAILY_SCHEDULE_MAGIC;
+    nextDailyQuoteAt = time(nullptr) + DAILY_QUOTE_INTERVAL_SECONDS;
+}
+
+void serviceDailyMorningSchedule()
+{
+    if (advanceDailyQuoteIfDue() == 0)
+    {
+        return;
+    }
+
+    saveCurrentView();
+    if (currentScreen == QUOTE_DISPLAY)
+    {
+        displayCurrentQuote(false);
+    }
+}
+
 void updateQuoteChangeTimer()
 {
     const uint32_t intervalSeconds = getQuoteDisplaySettings().autoChangeIntervalSeconds;
@@ -158,6 +224,8 @@ void enterQuoteDeepSleep()
     rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(MENU_BUTTON));
     esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(MENU_BUTTON), 0);
 
+    uint64_t nextWakeDelayUs = 0;
+    TimerWakeReason wakeReason = TIMER_WAKE_NONE;
     const uint32_t intervalSeconds = getQuoteDisplaySettings().autoChangeIntervalSeconds;
     if (intervalSeconds > 0)
     {
@@ -166,7 +234,28 @@ void enterQuoteDeepSleep()
         const unsigned long remainingMs = elapsedMs < intervalMs
             ? intervalMs - elapsedMs
             : 1;
-        esp_sleep_enable_timer_wakeup(static_cast<uint64_t>(remainingMs) * 1000ULL);
+        nextWakeDelayUs = static_cast<uint64_t>(remainingMs) * 1000ULL;
+        wakeReason = TIMER_WAKE_AUTO_QUOTE;
+    }
+
+    if (dailyMorningEnabled() && dailyScheduleMagic == DAILY_SCHEDULE_MAGIC)
+    {
+        const time_t now = time(nullptr);
+        const uint64_t remainingSeconds = nextDailyQuoteAt > now
+            ? static_cast<uint64_t>(nextDailyQuoteAt - now)
+            : 1ULL;
+        const uint64_t dailyWakeDelayUs = remainingSeconds * 1000000ULL;
+        if (nextWakeDelayUs == 0 || dailyWakeDelayUs <= nextWakeDelayUs)
+        {
+            nextWakeDelayUs = dailyWakeDelayUs;
+            wakeReason = TIMER_WAKE_DAILY_QUOTE;
+        }
+    }
+
+    retainedTimerWakeReason = wakeReason;
+    if (nextWakeDelayUs > 0)
+    {
+        esp_sleep_enable_timer_wakeup(nextWakeDelayUs);
     }
 
     prepareDisplayForSleep();
@@ -522,6 +611,11 @@ void goBack()
 void initializeUI()
 {
     initializeSettings();
+    if (dailyMorningEnabled() && dailyScheduleMagic != DAILY_SCHEDULE_MAGIC)
+    {
+        // A complete power loss clears the relative clock anchor; set it again in Settings.
+        setDailyMorningEnabled(false);
+    }
     const uint8_t activeQuoteCount = quoteCount(getQuoteDisplaySettings().category);
     const esp_sleep_wakeup_cause_t wakeCause = esp_sleep_get_wakeup_cause();
     const bool wokeFromQuoteSleep = retainedQuoteMagic == RETAINED_QUOTE_MAGIC &&
@@ -547,7 +641,12 @@ void initializeUI()
     {
         currentScreen = QUOTE_DISPLAY;
         quoteScreensaverMode = retainedQuoteScreensaverMode;
-        advanceQuoteForward();
+        const bool dailyWake = retainedTimerWakeReason == TIMER_WAKE_DAILY_QUOTE;
+        if (!dailyWake || advanceDailyQuoteIfDue(true) == 0)
+        {
+            advanceQuoteForward();
+        }
+        retainedTimerWakeReason = TIMER_WAKE_NONE;
         retainedQuote = currentQuote;
         displayCurrentQuote(false);
         lastUserActivityAt = millis();
@@ -587,6 +686,7 @@ void initializeUI()
 void updateUI()
 {
     serviceSettingsPersistence();
+    serviceDailyMorningSchedule();
     const InputEvent event = readInputEvent();
 
     if (event != INPUT_NONE)
@@ -802,18 +902,24 @@ void updateUI()
             }
             else if (selectedSetting == 5)
             {
-                togglePartialRefresh();
+                toggleDailyMorningSchedule();
             }
             else if (selectedSetting == 6)
+            {
+                togglePartialRefresh();
+            }
+            else if (selectedSetting == 7)
             {
                 cycleRefreshStyle();
             }
             else
             {
                 resetSettings();
+                dailyScheduleMagic = 0;
+                nextDailyQuoteAt = 0;
             }
             if (selectedSetting == 0 || selectedSetting == 1 || selectedSetting == 2 ||
-                selectedSetting == 7)
+                selectedSetting == 8)
             {
                 displaySettings();
             }

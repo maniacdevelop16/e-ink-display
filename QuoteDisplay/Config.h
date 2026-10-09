@@ -37,7 +37,7 @@ constexpr uint8_t MENU_PARTIALS_BEFORE_FULL_REFRESH = 8;
 constexpr int MENU_DYNAMIC_Y = 94;
 constexpr int MENU_DYNAMIC_HEIGHT = 148;
 constexpr uint8_t NUM_LAUNCHER_APPS = 4;
-constexpr uint8_t NUM_SETTINGS_ITEMS = 8;
+constexpr uint8_t NUM_SETTINGS_ITEMS = 9;
 constexpr uint8_t NUM_QUOTE_SETTINGS_ITEMS = 4;
 constexpr uint8_t SETTINGS_PARTIALS_BEFORE_FULL_REFRESH = 8;
 constexpr int SETTINGS_DYNAMIC_Y = 92;
@@ -65,3 +65,4 @@ constexpr int BREATHING_DYNAMIC_HEIGHT = 245;
 
 constexpr unsigned long DEBOUNCE_TIME_MS = 80;
 constexpr unsigned long PERSISTENCE_SAVE_DELAY_MS = 3000;
+constexpr uint32_t DAILY_QUOTE_INTERVAL_SECONDS = 24UL * 60UL * 60UL;

@@ -11,7 +11,7 @@ constexpr uint16_t DEEP_SLEEP_TIMEOUTS[] = { 0, 30, 60, 180, 300, 600 };
 constexpr uint8_t TIMEOUT_OPTION_COUNT = 6;
 
 GlobalSettings settings = {
-    FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30
+    FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30, false
 };
 QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };
 GlobalSettings persistedSettings = settings;
@@ -83,6 +83,7 @@ void initializeSettings()
         timeoutIndex(SCREENSAVER_TIMEOUTS, savedScreensaver, 2)];
     settings.deepSleepTimeoutSeconds = DEEP_SLEEP_TIMEOUTS[
         timeoutIndex(DEEP_SLEEP_TIMEOUTS, savedDeepSleep, 1)];
+    settings.dailyMorningEnabled = preferences.getBool("dailyOn", false);
     quoteSettings.autoChangeIntervalSeconds = preferences.getULong("quoteTime", 0);
     quoteSettings.theme = static_cast<QuoteTheme>(savedTheme < 3 ? savedTheme : QUOTE_THEME_QUIET);
     quoteSettings.category = static_cast<QuoteCategory>(
@@ -133,6 +134,10 @@ void flushSettingsPersistence()
         if (settings.deepSleepTimeoutSeconds != persistedSettings.deepSleepTimeoutSeconds)
         {
             preferences.putUShort("sleepTime", settings.deepSleepTimeoutSeconds);
+        }
+        if (settings.dailyMorningEnabled != persistedSettings.dailyMorningEnabled)
+        {
+            preferences.putBool("dailyOn", settings.dailyMorningEnabled);
         }
         persistedSettings = settings;
         globalSettingsDirty = false;
@@ -242,10 +247,16 @@ void cycleDeepSleepTimeout()
     saveGlobalSettings();
 }
 
+void setDailyMorningEnabled(bool enabled)
+{
+    settings.dailyMorningEnabled = enabled;
+    saveGlobalSettings();
+}
+
 void resetSettings()
 {
     settings = {
-        FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30
+        FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30, false
     };
     saveGlobalSettings();
 }
@@ -285,6 +296,11 @@ const char* deepSleepTimeoutLabel()
     return labels[timeoutIndex(DEEP_SLEEP_TIMEOUTS, settings.deepSleepTimeoutSeconds, 1)];
 }
 
+const char* dailyMorningLabel()
+{
+    return settings.dailyMorningEnabled ? "ON" : "SET NOW";
+}
+
 bool showNavigationHints()
 {
     return settings.navigationHintsEnabled;
@@ -298,6 +314,11 @@ uint16_t screensaverTimeoutSeconds()
 uint16_t deepSleepTimeoutSeconds()
 {
     return settings.deepSleepTimeoutSeconds;
+}
+
+bool dailyMorningEnabled()
+{
+    return settings.dailyMorningEnabled;
 }
 
 bool usePartialRefresh()
