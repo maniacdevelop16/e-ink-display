@@ -562,7 +562,6 @@ void showSettings(uint8_t selectedSetting)
         drawCenteredText("GLOBAL SETTINGS", 44);
         applyGlobalFont(GLOBAL_FONT_SMALL);
         drawCenteredText("APPLIES TO EVERY APP", 70);
-        display.drawLine(84, 84, DISPLAY_WIDTH - 84, 84, GxEPD_BLACK);
         drawSettingsContent(selectedSetting);
     } while (display.nextPage());
 }
