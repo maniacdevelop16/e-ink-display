@@ -793,9 +793,15 @@ void updateUI()
             {
                 cycleQuoteTheme();
             }
+            else if (selectedQuoteSetting == 3)
+            {
+                toggleDailyMorningSchedule();
+            }
             else
             {
                 resetQuoteDisplaySettings();
+                dailyScheduleMagic = 0;
+                nextDailyQuoteAt = 0;
                 currentQuote = 0;
                 saveCurrentView();
             }
@@ -902,24 +908,18 @@ void updateUI()
             }
             else if (selectedSetting == 5)
             {
-                toggleDailyMorningSchedule();
-            }
-            else if (selectedSetting == 6)
-            {
                 togglePartialRefresh();
             }
-            else if (selectedSetting == 7)
+            else if (selectedSetting == 6)
             {
                 cycleRefreshStyle();
             }
             else
             {
                 resetSettings();
-                dailyScheduleMagic = 0;
-                nextDailyQuoteAt = 0;
             }
             if (selectedSetting == 0 || selectedSetting == 1 || selectedSetting == 2 ||
-                selectedSetting == 8)
+                selectedSetting == 7)
             {
                 displaySettings();
             }

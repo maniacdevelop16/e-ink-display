@@ -34,7 +34,6 @@ struct GlobalSettings
     bool navigationHintsEnabled;
     uint16_t screensaverTimeoutSeconds;
     uint16_t deepSleepTimeoutSeconds;
-    bool dailyMorningEnabled;
 };
 
 enum QuoteTheme
@@ -49,6 +48,7 @@ struct QuoteDisplaySettings
     uint32_t autoChangeIntervalSeconds;
     QuoteTheme theme;
     QuoteCategory category;
+    bool dailyMorningEnabled;
 };
 
 void initializeSettings();

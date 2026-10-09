@@ -11,9 +11,9 @@ constexpr uint16_t DEEP_SLEEP_TIMEOUTS[] = { 0, 30, 60, 180, 300, 600 };
 constexpr uint8_t TIMEOUT_OPTION_COUNT = 6;
 
 GlobalSettings settings = {
-    FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30, false
+    FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30
 };
-QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };
+QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT, false };
 GlobalSettings persistedSettings = settings;
 QuoteDisplaySettings persistedQuoteSettings = quoteSettings;
 Preferences preferences;
@@ -83,11 +83,11 @@ void initializeSettings()
         timeoutIndex(SCREENSAVER_TIMEOUTS, savedScreensaver, 2)];
     settings.deepSleepTimeoutSeconds = DEEP_SLEEP_TIMEOUTS[
         timeoutIndex(DEEP_SLEEP_TIMEOUTS, savedDeepSleep, 1)];
-    settings.dailyMorningEnabled = preferences.getBool("dailyOn", false);
     quoteSettings.autoChangeIntervalSeconds = preferences.getULong("quoteTime", 0);
     quoteSettings.theme = static_cast<QuoteTheme>(savedTheme < 3 ? savedTheme : QUOTE_THEME_QUIET);
     quoteSettings.category = static_cast<QuoteCategory>(
         savedCategory < QUOTE_CATEGORY_COUNT ? savedCategory : QUOTE_CATEGORY_DEFAULT);
+    quoteSettings.dailyMorningEnabled = preferences.getBool("dailyOn", false);
     resumeScreen = preferences.getUChar("screen", 0);
     resumeQuote = preferences.getUChar("quote", 0);
     resumeLauncher = preferences.getUChar("launcher", 0);
@@ -135,10 +135,6 @@ void flushSettingsPersistence()
         {
             preferences.putUShort("sleepTime", settings.deepSleepTimeoutSeconds);
         }
-        if (settings.dailyMorningEnabled != persistedSettings.dailyMorningEnabled)
-        {
-            preferences.putBool("dailyOn", settings.dailyMorningEnabled);
-        }
         persistedSettings = settings;
         globalSettingsDirty = false;
     }
@@ -157,6 +153,10 @@ void flushSettingsPersistence()
         if (quoteSettings.category != persistedQuoteSettings.category)
         {
             preferences.putUChar("quoteCat", quoteSettings.category);
+        }
+        if (quoteSettings.dailyMorningEnabled != persistedQuoteSettings.dailyMorningEnabled)
+        {
+            preferences.putBool("dailyOn", quoteSettings.dailyMorningEnabled);
         }
         persistedQuoteSettings = quoteSettings;
         quoteSettingsDirty = false;
@@ -249,14 +249,14 @@ void cycleDeepSleepTimeout()
 
 void setDailyMorningEnabled(bool enabled)
 {
-    settings.dailyMorningEnabled = enabled;
-    saveGlobalSettings();
+    quoteSettings.dailyMorningEnabled = enabled;
+    saveQuoteSettings();
 }
 
 void resetSettings()
 {
     settings = {
-        FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30, false
+        FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30
     };
     saveGlobalSettings();
 }
@@ -298,7 +298,7 @@ const char* deepSleepTimeoutLabel()
 
 const char* dailyMorningLabel()
 {
-    return settings.dailyMorningEnabled ? "ON" : "SET NOW";
+    return quoteSettings.dailyMorningEnabled ? "ON" : "OFF";
 }
 
 bool showNavigationHints()
@@ -318,7 +318,7 @@ uint16_t deepSleepTimeoutSeconds()
 
 bool dailyMorningEnabled()
 {
-    return settings.dailyMorningEnabled;
+    return quoteSettings.dailyMorningEnabled;
 }
 
 bool usePartialRefresh()
@@ -381,7 +381,7 @@ void cycleQuoteCategoryBackward()
 
 void resetQuoteDisplaySettings()
 {
-    quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT };
+    quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT, false };
     saveQuoteSettings();
 }
 
