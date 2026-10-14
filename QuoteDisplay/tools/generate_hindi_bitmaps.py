@@ -21,7 +21,7 @@ SOURCE = ROOT / "content" / "hi.json"
 OUTPUT = ROOT / "HindiBitmaps.cpp"
 CATEGORIES = (
     "default", "ramayana", "mahabharata", "kabir",
-    "upanishads", "jain", "buddhist", "diwali",
+    "upanishads", "jain", "buddhist", "diwali", "office",
 )
 ENGLISH_ARRAYS = (
     ("Quotes.cpp", "quotes"),
@@ -32,10 +32,11 @@ ENGLISH_ARRAYS = (
     ("QuoteCategories.cpp", "jainQuotes"),
     ("QuoteCategories.cpp", "buddhistQuotes"),
     ("QuoteCategories.cpp", "diwaliQuotes"),
+    ("QuoteCategories.cpp", "officeQuotes"),
 )
 CATEGORY_NAMES = (
     "सामान्य", "रामायण", "महाभारत", "कबीर",
-    "उपनिषद", "जैन दर्शन", "बौद्ध दर्शन", "दीपावली",
+    "उपनिषद", "जैन दर्शन", "बौद्ध दर्शन", "दीपावली", "ऑफ़िस",
 )
 BODY_SIZES = (19, 24, 29)
 AUTHOR_SIZES = (16, 18, 20)
@@ -106,7 +107,7 @@ def compress(raw: bytes) -> bytes:
 
 def preview(content: dict, temporary: Path, directory: Path) -> None:
     directory.mkdir(parents=True, exist_ok=True)
-    for category in ("default", "diwali"):
+    for category in ("default", "diwali", "office"):
         category_index = CATEGORIES.index(category)
         quote = content[category][0]
         canvas = Image.new("RGB", (400, 300), "white")

@@ -2,8 +2,9 @@
 
 The Quote Display app stores its English text in `Quotes.cpp` and
 `QuoteCategories.cpp`. Hindi text lives in `hi.json` in exactly the same quote
-order. The Diwali category contains ten original short reflections; teachings
-in the other named categories remain display-friendly adaptations.
+order. Diwali contains ten original short reflections, and Office contains ten
+original playful observations. Teachings in the other named categories remain
+display-friendly adaptations.
 
 To add a quote, add the English entry and its Hindi counterpart in the same
 position. For a new category, add its enum and English entries in `Quotes.h`

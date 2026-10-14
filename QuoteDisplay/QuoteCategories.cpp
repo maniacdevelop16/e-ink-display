@@ -104,6 +104,21 @@ const Quote diwaliQuotes[CATEGORY_QUOTE_COUNT] =
     { "May your home", "hold warmth, peace,", "and open hearts.", "Diwali Reflection" },
     { "Keep a little light", "for the road", "ahead.", "Diwali Reflection" }
 };
+
+// Original, playful office observations; the labels are fictional desk personas.
+const Quote officeQuotes[CATEGORY_QUOTE_COUNT] =
+{
+    { "Status: working.", "Mood: buffering.", "Coffee: loading.", "Desk Status" },
+    { "My calendar says", "available.", "My brain disagrees.", "Calendar" },
+    { "This meeting", "could have been", "a deep breath.", "Meeting Notes" },
+    { "Inbox zero?", "I prefer", "inbox suspense.", "Inbox" },
+    { "Today's progress:", "one task done,", "six tabs closed.", "Daily Update" },
+    { "I was focused", "until someone said", "'quick question.'", "Focus Mode" },
+    { "Deadline near.", "Creativity has", "entered the chat.", "Deadline" },
+    { "My Monday mood", "has requested", "a Friday update.", "Monday Desk" },
+    { "Out of office", "is a state of mind", "I aspire to.", "Office Dream" },
+    { "The to-do list", "grew overnight.", "Very ambitious.", "To-do List" }
+};
 }
 
 const Quote& getQuote(QuoteCategory category, uint8_t index)
@@ -118,6 +133,7 @@ const Quote& getQuote(QuoteCategory category, uint8_t index)
         case QUOTE_CATEGORY_JAIN: return jainQuotes[safeIndex];
         case QUOTE_CATEGORY_BUDDHIST: return buddhistQuotes[safeIndex];
         case QUOTE_CATEGORY_DIWALI: return diwaliQuotes[safeIndex];
+        case QUOTE_CATEGORY_OFFICE: return officeQuotes[safeIndex];
         case QUOTE_CATEGORY_DEFAULT:
         case QUOTE_CATEGORY_COUNT:
         default: return getQuote(safeIndex);
@@ -133,7 +149,7 @@ const char* quoteCategoryLabel(QuoteCategory category)
 {
     const char* labels[] = {
         "DEFAULT", "RAMAYANA", "MAHABHARATA", "KABIR",
-        "UPANISHADS", "JAIN", "BUDDHIST", "DIWALI"
+        "UPANISHADS", "JAIN", "BUDDHIST", "DIWALI", "OFFICE"
     };
     return labels[category < QUOTE_CATEGORY_COUNT ? category : QUOTE_CATEGORY_DEFAULT];
 }
