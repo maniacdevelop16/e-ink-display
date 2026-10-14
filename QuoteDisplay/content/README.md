@@ -10,7 +10,8 @@ position. For a new category, add its enum and English entries in `Quotes.h`
 and `QuoteCategories.cpp`, then add the category name and Hindi entries in
 `hi.json` and `tools/generate_hindi_bitmaps.py`. Update the English category
 count or selection logic as needed. The generator validates text width and
-height so it cannot silently clip on the 400 × 300 display.
+height so it cannot silently clip on the 400 × 300 display. It also checks
+that every English category has the same number of Hindi entries.
 
 Generate the Hindi asset before compiling firmware:
 
