@@ -22,4 +22,3 @@ struct HindiQuoteArt
 const HindiQuoteArt& getHindiQuoteArt(QuoteCategory category, uint8_t index, FontSize size);
 const HindiBitmap& getHindiCategoryArt(QuoteCategory category, FontSize size);
 const HindiBitmap& getHindiQuoteHintArt();
-
