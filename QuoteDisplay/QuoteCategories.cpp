@@ -89,6 +89,21 @@ const Quote buddhistQuotes[CATEGORY_QUOTE_COUNT] =
     { "Experience flows", "without a fixed", "self at its center.", "Vasubandhu (adapted)" },
     { "A quiet mind", "sees change", "without fear.", "Ashvaghosha (adapted)" }
 };
+
+// Original, short reflections for the festival; no historical attribution implied.
+const Quote diwaliQuotes[CATEGORY_QUOTE_COUNT] =
+{
+    { "One small lamp", "can soften", "a long night.", "Diwali Reflection" },
+    { "Make room for light", "in the places", "you call home.", "Diwali Reflection" },
+    { "Share your joy.", "It grows brighter", "in another hand.", "Diwali Reflection" },
+    { "A new beginning", "can start with", "one kind act.", "Diwali Reflection" },
+    { "Let gratitude", "be the first lamp", "you light today.", "Diwali Reflection" },
+    { "Even a quiet flame", "can guide someone", "toward hope.", "Diwali Reflection" },
+    { "Celebrate the light", "you find", "in each other.", "Diwali Reflection" },
+    { "Leave yesterday's", "shadows behind.", "Welcome today.", "Diwali Reflection" },
+    { "May your home", "hold warmth, peace,", "and open hearts.", "Diwali Reflection" },
+    { "Keep a little light", "for the road", "ahead.", "Diwali Reflection" }
+};
 }
 
 const Quote& getQuote(QuoteCategory category, uint8_t index)
@@ -102,6 +117,7 @@ const Quote& getQuote(QuoteCategory category, uint8_t index)
         case QUOTE_CATEGORY_UPANISHADS: return upanishadQuotes[safeIndex];
         case QUOTE_CATEGORY_JAIN: return jainQuotes[safeIndex];
         case QUOTE_CATEGORY_BUDDHIST: return buddhistQuotes[safeIndex];
+        case QUOTE_CATEGORY_DIWALI: return diwaliQuotes[safeIndex];
         case QUOTE_CATEGORY_DEFAULT:
         case QUOTE_CATEGORY_COUNT:
         default: return getQuote(safeIndex);
@@ -117,7 +133,7 @@ const char* quoteCategoryLabel(QuoteCategory category)
 {
     const char* labels[] = {
         "DEFAULT", "RAMAYANA", "MAHABHARATA", "KABIR",
-        "UPANISHADS", "JAIN", "BUDDHIST"
+        "UPANISHADS", "JAIN", "BUDDHIST", "DIWALI"
     };
     return labels[category < QUOTE_CATEGORY_COUNT ? category : QUOTE_CATEGORY_DEFAULT];
 }
