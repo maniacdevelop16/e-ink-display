@@ -4,7 +4,7 @@ namespace
 {
 const Quote quotes[] =
 {
-    { "Know thyself !.", "", "", "Socrates" },
+    { "Know thyself .", "", "", "Socrates" },
     { "The unexamined life", "is not worth living.", "", "Socrates" },
     { "I think, therefore", "I am.", "", "Descartes" },
     { "He who has a why", "to live can bear", "almost any how.", "Nietzsche" },
