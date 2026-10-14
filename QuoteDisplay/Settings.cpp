@@ -13,7 +13,9 @@ constexpr uint8_t TIMEOUT_OPTION_COUNT = 6;
 GlobalSettings settings = {
     FONT_MONO_COMFORT, FONT_SIZE_MEDIUM, REFRESH_GENTLE, true, false, 20, 30
 };
-QuoteDisplaySettings quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT, false };
+QuoteDisplaySettings quoteSettings = {
+    0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT, false, QUOTE_LANGUAGE_ENGLISH
+};
 GlobalSettings persistedSettings = settings;
 QuoteDisplaySettings persistedQuoteSettings = quoteSettings;
 Preferences preferences;
@@ -88,6 +90,9 @@ void initializeSettings()
     quoteSettings.category = static_cast<QuoteCategory>(
         savedCategory < QUOTE_CATEGORY_COUNT ? savedCategory : QUOTE_CATEGORY_DEFAULT);
     quoteSettings.dailyMorningEnabled = preferences.getBool("dailyOn", false);
+    const uint8_t savedLanguage = preferences.getUChar("quoteLang", QUOTE_LANGUAGE_ENGLISH);
+    quoteSettings.language = static_cast<QuoteLanguage>(
+        savedLanguage <= QUOTE_LANGUAGE_HINDI ? savedLanguage : QUOTE_LANGUAGE_ENGLISH);
     resumeScreen = preferences.getUChar("screen", 0);
     resumeQuote = preferences.getUChar("quote", 0);
     resumeLauncher = preferences.getUChar("launcher", 0);
@@ -157,6 +162,10 @@ void flushSettingsPersistence()
         if (quoteSettings.dailyMorningEnabled != persistedQuoteSettings.dailyMorningEnabled)
         {
             preferences.putBool("dailyOn", quoteSettings.dailyMorningEnabled);
+        }
+        if (quoteSettings.language != persistedQuoteSettings.language)
+        {
+            preferences.putUChar("quoteLang", quoteSettings.language);
         }
         persistedQuoteSettings = quoteSettings;
         quoteSettingsDirty = false;
@@ -387,9 +396,18 @@ void cycleQuoteCategoryBackward()
     saveQuoteSettings();
 }
 
+void cycleQuoteLanguage()
+{
+    quoteSettings.language = quoteSettings.language == QUOTE_LANGUAGE_ENGLISH
+        ? QUOTE_LANGUAGE_HINDI : QUOTE_LANGUAGE_ENGLISH;
+    saveQuoteSettings();
+}
+
 void resetQuoteDisplaySettings()
 {
-    quoteSettings = { 0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT, false };
+    quoteSettings = {
+        0, QUOTE_THEME_QUIET, QUOTE_CATEGORY_DEFAULT, false, QUOTE_LANGUAGE_ENGLISH
+    };
     saveQuoteSettings();
 }
 
@@ -411,6 +429,11 @@ const char* quoteThemeLabel()
 {
     const char* labels[] = { "QUIET", "MINIMAL", "FOCUS" };
     return labels[quoteSettings.theme];
+}
+
+const char* quoteLanguageLabel()
+{
+    return quoteSettings.language == QUOTE_LANGUAGE_HINDI ? "HINDI" : "ENGLISH";
 }
 
 uint8_t savedScreen()

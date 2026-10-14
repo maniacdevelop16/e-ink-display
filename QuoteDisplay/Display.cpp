@@ -15,12 +15,14 @@
 #include <Fonts/FreeSerif18pt7b.h>
 
 #include "Config.h"
+#include "HindiBitmaps.h"
 #include "Settings.h"
 
 namespace
 {
 GxEPD2_BW<GxEPD2_420_GYE042A87, GxEPD2_420_GYE042A87::HEIGHT> display(
     GxEPD2_420_GYE042A87(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
+uint8_t hindiRaster[8192];
 
 void drawCenteredText(const char* text, int y)
 {
@@ -298,28 +300,125 @@ void drawScreensaverQuote(const Quote& quote)
     drawCenteredText(authorText, 232);
 }
 
+void drawHindiBitmap(const HindiBitmap& bitmap, int top, uint16_t color = GxEPD_BLACK)
+{
+    const size_t expectedBytes = ((bitmap.width + 7) / 8) * bitmap.height;
+    if (expectedBytes > sizeof(hindiRaster))
+    {
+        return;
+    }
+
+    size_t written = 0;
+    size_t cursor = 0;
+    while (cursor < bitmap.length && written < expectedBytes)
+    {
+        const uint8_t token = pgm_read_byte(bitmap.compressed + cursor++);
+        const size_t count = token < 128 ? token + 1 : token - 127;
+        if (written + count > expectedBytes || (token < 128 && cursor + count > bitmap.length))
+        {
+            return;
+        }
+        if (token < 128)
+        {
+            for (size_t offset = 0; offset < count; ++offset)
+            {
+                hindiRaster[written++] = pgm_read_byte(bitmap.compressed + cursor++);
+            }
+        }
+        else
+        {
+            memset(hindiRaster + written, 0, count);
+            written += count;
+        }
+    }
+    if (written == expectedBytes)
+    {
+        display.drawBitmap((DISPLAY_WIDTH - bitmap.width) / 2, top,
+                           hindiRaster, bitmap.width, bitmap.height, color);
+    }
+}
+
+void drawHindiQuote(QuoteCategory category, uint8_t index, uint8_t count,
+                    bool screensaverMode)
+{
+    const QuoteDisplaySettings& options = getQuoteDisplaySettings();
+    const FontSize size = getSettings().fontSize;
+    const HindiQuoteArt& art = getHindiQuoteArt(category, index, size);
+    const int bodyTop = size == FONT_SIZE_SMALL ? 103 :
+        (size == FONT_SIZE_LARGE ? 90 : 97);
+
+    display.fillScreen(GxEPD_WHITE);
+    display.setTextColor(GxEPD_BLACK);
+
+    if (!screensaverMode)
+    {
+        if (options.theme == QUOTE_THEME_FOCUS)
+        {
+            display.fillRect(0, 0, DISPLAY_WIDTH, 44, GxEPD_BLACK);
+            drawHindiBitmap(getHindiCategoryArt(category, size), 11, GxEPD_WHITE);
+            display.drawLine(70, 72, DISPLAY_WIDTH - 70, 72, GxEPD_BLACK);
+        }
+        else if (options.theme == QUOTE_THEME_MINIMAL)
+        {
+            drawHindiBitmap(getHindiCategoryArt(category, size), 17);
+            display.drawLine(120, 50, DISPLAY_WIDTH - 120, 50, GxEPD_BLACK);
+        }
+        else
+        {
+            drawHindiBitmap(getHindiCategoryArt(category, size), 17);
+            display.drawLine(82, 56, DISPLAY_WIDTH - 82, 56, GxEPD_BLACK);
+            display.drawLine(58, 84, 58, 186, GxEPD_BLACK);
+            display.fillCircle(58, 84, 3, GxEPD_BLACK);
+        }
+    }
+
+    drawHindiBitmap(art.body, bodyTop);
+    drawHindiBitmap(art.author, 217);
+
+    if (!screensaverMode)
+    {
+        if (options.theme != QUOTE_THEME_MINIMAL)
+        {
+            display.drawLine(104, 250, DISPLAY_WIDTH - 104, 250, GxEPD_BLACK);
+        }
+        char counter[20];
+        snprintf(counter, sizeof(counter), "%u / %u",
+                 static_cast<unsigned int>(index + 1), static_cast<unsigned int>(count));
+        applyGlobalFont(GLOBAL_FONT_SMALL);
+        drawCenteredText(counter, 273);
+        if (showNavigationHints())
+        {
+            drawHindiBitmap(getHindiQuoteHintArt(), 280);
+        }
+    }
+}
+
 void drawQuoteSettingsContent(uint8_t selectedSetting)
 {
     char categoryRow[34];
+    char languageRow[32];
     char timerRow[32];
     char themeRow[32];
     char dailyRow[32];
     snprintf(categoryRow, sizeof(categoryRow), "CATEGORY: %s",
              quoteCategoryLabel(getQuoteDisplaySettings().category));
+    snprintf(languageRow, sizeof(languageRow), "LANGUAGE: %s", quoteLanguageLabel());
     snprintf(timerRow, sizeof(timerRow), "AUTO CHANGE: %s", quoteChangeIntervalLabel());
     snprintf(themeRow, sizeof(themeRow), "THEME: %s", quoteThemeLabel());
     snprintf(dailyRow, sizeof(dailyRow), "DAILY CHANGE: %s", dailyMorningLabel());
     const char* rows[] = {
-        categoryRow, timerRow, themeRow, dailyRow, "RESET QUOTE SETTINGS"
+        categoryRow, languageRow, timerRow, themeRow, dailyRow,
+        "RESET QUOTE SETTINGS"
     };
 
     display.setTextColor(GxEPD_BLACK);
     applyGlobalFont(GLOBAL_FONT_SMALL);
-    drawMenuItem(rows[0], 102, selectedSetting == 0);
-    drawMenuItem(rows[1], 127, selectedSetting == 1);
-    drawMenuItem(rows[2], 152, selectedSetting == 2);
-    drawMenuItem(rows[3], 177, selectedSetting == 3);
-    drawMenuItem(rows[4], 202, selectedSetting == 4);
+    drawMenuItem(rows[0], 104, selectedSetting == 0);
+    drawMenuItem(rows[1], 129, selectedSetting == 1);
+    drawMenuItem(rows[2], 154, selectedSetting == 2);
+    drawMenuItem(rows[3], 179, selectedSetting == 3);
+    drawMenuItem(rows[4], 204, selectedSetting == 4);
+    drawMenuItem(rows[5], 229, selectedSetting == 5);
     drawNavigationHint("UP/DOWN SELECT  PRESS CHANGE");
 }
 
@@ -456,7 +555,11 @@ void showQuote(uint8_t index, bool screensaverMode)
 
     do
     {
-        if (screensaverMode)
+        if (getQuoteDisplaySettings().language == QUOTE_LANGUAGE_HINDI)
+        {
+            drawHindiQuote(category, index, count, screensaverMode);
+        }
+        else if (screensaverMode)
         {
             drawScreensaverQuote(quote);
         }

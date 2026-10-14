@@ -43,12 +43,19 @@ enum QuoteTheme
     QUOTE_THEME_FOCUS
 };
 
+enum QuoteLanguage
+{
+    QUOTE_LANGUAGE_ENGLISH,
+    QUOTE_LANGUAGE_HINDI
+};
+
 struct QuoteDisplaySettings
 {
     uint32_t autoChangeIntervalSeconds;
     QuoteTheme theme;
     QuoteCategory category;
     bool dailyMorningEnabled;
+    QuoteLanguage language;
 };
 
 void initializeSettings();
@@ -85,9 +92,11 @@ void cycleQuoteChangeInterval();
 void cycleQuoteTheme();
 void cycleQuoteCategory();
 void cycleQuoteCategoryBackward();
+void cycleQuoteLanguage();
 void resetQuoteDisplaySettings();
 const char* quoteChangeIntervalLabel();
 const char* quoteThemeLabel();
+const char* quoteLanguageLabel();
 
 // Small device state is stored in the ESP32's built-in flash (NVS).
 uint8_t savedScreen();

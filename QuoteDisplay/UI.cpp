@@ -788,6 +788,10 @@ void updateUI()
             }
             else if (selectedQuoteSetting == 1)
             {
+                cycleQuoteLanguage();
+            }
+            else if (selectedQuoteSetting == 2)
+            {
                 cycleQuoteChangeInterval();
                 if (!dailyMorningEnabled())
                 {
@@ -795,11 +799,11 @@ void updateUI()
                     nextDailyQuoteAt = 0;
                 }
             }
-            else if (selectedQuoteSetting == 2)
+            else if (selectedQuoteSetting == 3)
             {
                 cycleQuoteTheme();
             }
-            else if (selectedQuoteSetting == 3)
+            else if (selectedQuoteSetting == 4)
             {
                 toggleDailyMorningSchedule();
             }
