@@ -42,6 +42,9 @@ constexpr uint8_t NUM_QUOTE_SETTINGS_ITEMS = 6;
 constexpr uint8_t SETTINGS_PARTIALS_BEFORE_FULL_REFRESH = 8;
 constexpr int SETTINGS_DYNAMIC_Y = 92;
 constexpr int SETTINGS_DYNAMIC_HEIGHT = 180;
+// Include the divider and the full height of the first Category row in partial updates.
+constexpr int QUOTE_SETTINGS_DYNAMIC_Y = 80;
+constexpr int QUOTE_SETTINGS_DYNAMIC_HEIGHT = 192;
 
 // Pomodoro behavior. The periodic refresh is intentionally conservative for e-paper.
 constexpr uint16_t POMODORO_DURATION_SECONDS = 25 * 60;

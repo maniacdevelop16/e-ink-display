@@ -607,12 +607,15 @@ void showQuoteSettings(uint8_t selectedSetting)
 void updateQuoteSettingsSelection(uint8_t selectedSetting)
 {
     display.setRotation(0);
-    display.setPartialWindow(0, SETTINGS_DYNAMIC_Y, DISPLAY_WIDTH, SETTINGS_DYNAMIC_HEIGHT);
+    display.setPartialWindow(0, QUOTE_SETTINGS_DYNAMIC_Y, DISPLAY_WIDTH,
+                             QUOTE_SETTINGS_DYNAMIC_HEIGHT);
     display.firstPage();
 
     do
     {
-        display.fillRect(0, SETTINGS_DYNAMIC_Y, DISPLAY_WIDTH, SETTINGS_DYNAMIC_HEIGHT, GxEPD_WHITE);
+        display.fillRect(0, QUOTE_SETTINGS_DYNAMIC_Y, DISPLAY_WIDTH,
+                         QUOTE_SETTINGS_DYNAMIC_HEIGHT, GxEPD_WHITE);
+        display.drawLine(84, 84, DISPLAY_WIDTH - 84, 84, GxEPD_BLACK);
         drawQuoteSettingsContent(selectedSetting);
     } while (display.nextPage());
 
